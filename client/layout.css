@@ -1,0 +1,176 @@
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.hflex {
+    display: flex;
+}
+
+.vflex {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-align-items-center {
+    align-items: center;
+}
+
+.flex-align-items-end {
+    align-items: flex-end;
+}
+
+.flex-justify-content-center {
+    justify-content: center;
+}
+
+.flex-justify-content-start {
+    justify-content: flex-start;
+}
+
+.flex-justify-content-end {
+    justify-content: flex-end;
+}
+
+.flex-justify-content-space-between {
+    justify-content: space-between;
+}
+
+.flex-justify-content-space-around {
+    justify-content: space-around;
+}
+
+.hflex.wrap, .vflex.wrap {
+    flex-wrap: wrap;
+}
+
+.grow {
+    flex: 1 1 auto;
+}
+
+.no-shrink {
+    flex-shrink: 0;
+}
+
+.table {
+    display: table;
+
+}
+
+.table-row {
+    display: table-row;
+}
+
+.table-row {
+    display: table-row;
+}
+
+.table-row > * {
+    display: table-cell;
+}
+
+.w100 {
+    width: 100%;
+}
+
+.h100 {
+    height: 100%;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.absoluteTopLeftZeroW100H100 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.relative {
+    position: relative;
+}
+
+.display-none {
+    display: none;
+}
+
+.visibility-hidden {
+    visibility: hidden;
+}
+
+.cursor-default {
+    cursor: default;
+}
+
+.cursor-crosshair {
+    cursor: crosshair;
+}
+
+.cursor-move {
+    cursor: move;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grabbing {
+    cursor: grabbing;
+}
+
+.m5 {
+    margin: 5px;
+}
+
+.m5-bottom {
+    margin-bottom: 5px;
+}
+
+.m5-top {
+    margin-top: 5px;
+}
+
+.p5 {
+    padding: 5px;
+}
+
+.ml3 {
+    margin-left: 3px;
+}
+
+.ml5 {
+    margin-left: 5px;
+}
+
+.p10 {
+    padding: 10px;
+}
+
+.mt3 {
+    margin-top: 3px;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.text-align-right {
+    text-align: right;
+}
+
+.text-crop {
+    overflow: hidden;
+    white-space: nowrap; /* Don't forget this one */
+    text-overflow: ellipsis;
+}
+
+.italic {
+    font-style: italic;
+}

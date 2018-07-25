@@ -1,0 +1,435 @@
+@red: #E53935;
+@darkgray: #363539;
+@lightgray: #F3F3F3;
+@textColor: white;
+@class-chooser-width: 230px;
+
+html, body, #app-content, #app-content > div {
+  height: 100%;
+  margin: 0;
+  background-color: #000000;
+  color: @textColor;
+  font-size: 95%;
+  font-family: "Roboto", sans-serif;
+  overflow-x: hidden; /* TODO: should not be needed, investigate */
+}
+
+a {
+  color: @lightgray;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: 100%;
+  background-color: #656565;
+  text-align: center;
+  font-weight: normal;
+}
+
+.hflex {
+  .children-margin > * + * {
+    margin-left: 10px;
+  }
+}
+
+.table-row {
+  > * {
+    vertical-align: top;
+  }
+  > * + * {
+    padding-left: 5px;
+  }
+  > *:nth-child(1) {
+    padding-bottom: 1px;
+    padding-right: 8px;
+  }
+}
+
+#canvasContainer {
+  overflow: hidden;
+}
+
+.sse-folder {
+  svg {
+    color: khaki;
+  }
+}
+
+.sse-toolbar {
+  color: @textColor;
+  background-color: @darkgray;
+  padding: 0 5px !important;
+
+  .group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    &.v {
+      flex-direction: column;
+      align-items: start;
+    }
+  }
+  .shift {
+    margin-top: -11px;
+  }
+
+  .tool-title {
+    text-align: center;
+    color: #d9d9d9;
+    padding-top: 3px;
+    font-size: 10px;
+  }
+
+  &.toolbar-3d {
+    .v.group {
+      margin-top: 7px;
+    }
+  }
+
+  .sse-logo {
+    img {
+      height: 76%;
+      max-width: 50px;
+    }
+    div {
+      color: @textColor;
+      padding-left: 5px;
+      span {
+        font-size: 90%;
+        text-align: center;
+        font-variant: all-petite-caps;
+        margin-right: 5px;
+        line-height: 11px;
+
+      }
+      span:nth-child(1) {
+        letter-spacing: 1px;
+        color: lightgray;
+      }
+      span:nth-child(2) {
+        letter-spacing: 0;
+        color: @textColor;
+      }
+      span:nth-child(3) {
+        letter-spacing: 2px;
+        color: lightgray;
+      }
+
+    }
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#waiting {
+  animation: rotating 2s linear infinite;
+  * {
+    color: #555555;
+  }
+  svg {
+    width: 80px !important;
+    height: 80px !important;
+  }
+}
+
+.sse-check-icon svg {
+  background-color: rgba(0, 200, 0, 0.73);
+  border-radius: 50%;
+}
+
+button {
+  text-transform: none !important;
+  sup {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    line-height: 10px;
+  }
+}
+
+.sse-thumbnail {
+  width: 200px;
+  max-height: 200px;
+  position: relative;
+  padding-bottom: 5px;
+  margin: 8px;
+  border: solid 1px @lightgray;
+  cursor: pointer;
+  img {
+    width: 100%;
+    & + * {
+      margin-top: 3px;
+    }
+  }
+  svg {
+    right: 0;
+    top: 5px;
+    position: absolute;
+    display: inline-block;
+    width: 30px !important;
+    min-width: auto !important;
+
+  }
+}
+
+.sse-sliders {
+  width: 190px;
+  border-left: solid 1px rgba(90, 90, 90, .8);
+  color: @textColor;
+  background-color: @darkgray !important;
+  .rc-slider {
+    margin-left: 5px;
+  }
+  .sse-layer {
+
+    cursor: pointer;
+    margin-bottom: 7px;
+    > * {
+      display: flex;
+      width: 100%;
+      padding-left: 7px;
+
+    }
+
+    .selected {
+      border: solid 1px @red;
+    }
+  }
+
+  .sse-sliders-stack {
+    margin-top: 3px;
+  }
+
+  > *:first-child {
+    padding-top: 0;
+  }
+  > * {
+    padding-left: 7px;
+    padding-right: 7px;
+    padding-top: 7px;
+
+  }
+}
+
+.sse-tag {
+  background-color: #3D5AFE;
+  color: @textColor;
+  margin-left: 5px;
+  margin-right: 5px;
+  padding-left: 3px;
+  padding-right: 3px;
+  text-align: center;
+  min-width: 50px;
+  font-size: 14px;
+  line-height: 20px;
+  border-radius: 4px;
+  display: inline
+}
+
+.sse-object-toolbar {
+  height: 80px;
+  background-color: @darkgray;
+  border-top: solid 1px #111111;
+  padding: 4px;
+
+  .object-selected {
+    width: 190px;
+    padding-left: 3px;
+  }
+
+  .group + .group {
+    margin-left: 4px;
+  }
+  .object-list {
+    border-left: solid 1px #111111;
+    align-content: flex-start;
+    height: 72px;
+  }
+  .object-button {
+    width: 130px;
+    height: 24px;
+    position: relative;
+
+    .position-indicator + span {
+      margin-left: 3px;
+
+    }
+
+    &.selected * {
+      text-decoration: underline;
+    }
+
+    button {
+      &:hover {
+        color: #727272;
+      }
+
+      text-align: left;
+
+      padding: 0;
+
+      border: none;
+      margin: 0 0 0 3px;
+
+      background: none;
+      outline: none;
+
+      color: @textColor;
+      cursor: pointer;
+
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 24px;
+      line-height: 24px;
+      * {
+        height: 24px
+      }
+    }
+  }
+}
+
+.sse-command {
+  position: relative;
+  font-size: 9px;
+
+  &.mini {
+    &:not(.object-buttons) {
+      span {
+        font-size: 9px;
+      }
+      svg {
+        width: 0.75em;
+        height: 0.75em;
+      }
+      button {
+        width: 24px;
+        height: 24px;
+      }
+    }
+    &.object-buttons button {
+      padding: 5px;
+      &:hover {
+        border-radius: 0;
+      }
+    }
+    .title {
+      display: none;
+    }
+  }
+
+  .title {
+    text-align: center;
+    margin: 0 auto;
+    bottom: 7px;
+    font-family: "Roboto", sans-serif;
+    position: relative;
+    display: block;
+  }
+
+  &.disabled * {
+    color: darkgray;
+  }
+  &.enabled {
+    * {
+      color: @textColor;
+    }
+    span.title {
+      color: #999999;
+    }
+  }
+  &.highlighted * {
+    color: @red;
+  }
+}
+
+.sse-pager {
+  height: 48px;
+}
+
+.sse-class-chooser {
+
+  width: @class-chooser-width;
+
+  sup {
+    line-height: 0;
+    position: relative;
+    margin-top: -4px;
+  }
+
+  .class-button {
+    position: relative;
+    > span {
+      width: 100%;
+      justify-content: left;
+    }
+  }
+
+  svg.chevron {
+    margin: 0 -6px;
+  }
+  svg:not(.chevron) {
+    margin-right: 2px;
+  }
+}
+
+.sse-button {
+  border: none;
+  line-height: 20px;
+  background-color: #525252;
+  color: @textColor;
+  border-radius: 4px;
+  cursor: pointer;
+  &.big {
+    padding: 10px 5px;
+  }
+}
+
+.sse-folder-stats {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.sse-folder {
+  width: 180px;
+  margin: 13px;
+  * {
+    text-decoration: none;
+  }
+  svg {
+    width: 5em;
+    height: 5em;
+  }
+}
+
+.scroller {
+  overflow-y: auto;
+}
+
+.breadcrumb {
+  * {
+    text-transform: none;
+  }
+  & + .breadcrumb {
+    margin-left: 5px;
+  }
+}
+
+.editor {
+  * {
+    image-rendering: pixelated;
+  }
+  .box1 > div:first-child,
+  .box2 {
+    border-bottom: solid 1px #FAFAFA;
+  }
+}
+

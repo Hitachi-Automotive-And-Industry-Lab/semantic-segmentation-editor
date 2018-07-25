@@ -1,0 +1,42 @@
+.tippy-popper[x-placement^=top] .tippy-tooltip.sse-theme .tippy-arrow {
+    border-top: 7px solid #727272;
+    border-right: 7px solid transparent;
+    border-left: 7px solid transparent
+}
+
+.tippy-popper[x-placement^=bottom] .tippy-tooltip.sse-theme .tippy-arrow {
+    border-bottom: 7px solid #727272;
+    border-right: 7px solid transparent;
+    border-left: 7px solid transparent
+}
+
+.tippy-popper[x-placement^=left] .tippy-tooltip.sse-theme .tippy-arrow {
+    border-left: 7px solid #727272;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent
+}
+
+.tippy-popper[x-placement^=right] .tippy-tooltip.sse-theme .tippy-arrow {
+    border-right: 7px solid #727272;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent
+}
+
+.tippy-tooltip.sse-theme {
+    color: whitesmoke;
+    box-shadow: 0 0 20px 4px rgba(154, 161, 177, .15), 0 4px 80px -8px rgba(36, 40, 47, .25), 0 4px 4px -2px rgba(91, 94, 105, .15);
+    background-color: #727272;
+    max-width: 350px;
+}
+
+.tippy-tooltip.sse-theme .tippy-backdrop {
+    background-color: #727272
+}
+
+.tippy-tooltip.sse-theme .tippy-roundarrow {
+    fill: #727272
+}
+
+.tippy-tooltip.sse-theme[data-animatefill] {
+    background-color: transparent
+}
