@@ -6,10 +6,19 @@ It supports images (.jpg and .png files) and point clouds (.pcd files).
 It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactjs.org),
 [Paper.js](http://paperjs.org/) and [three.js](https://threejs.org/).
 
+Bitmap Image Editor
 
-Video Presentation 2D
+<a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.jpg"/></a>
+<a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/></a>
 
-Video Presentation 3D
+(click images to zoom)
+
+PCD Point Cloud Editor
+
+<a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.jpg"/></a>
+<a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.jpg"/></a>
+
+(click images to zoom)
 
 ## How to run
 
