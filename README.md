@@ -23,9 +23,11 @@ PCD Point Cloud Editor
 ## How to run
 
 ```shell
-git clone xxx
+git clone https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor
 cd semantic-segmentation-editor
-=> Change 'input-folder' and 'output-folder' according to your needs in config.json
+```
+__Change 'input-folder' and 'output-folder' according to your needs in config.json__
+```
 meteor npm install
 meteor
 ```
@@ -69,12 +71,12 @@ the sets of classes available in the tool.
 
 The editor is built around 3 different screens:
   - The file navigator let's you browse available files to select a bitmap images or a point cloud for labeling
-  SCREENSHOT
+  <img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/CaptureN1.jpg"/>
   - The bitmap image editor is dedicated to the labeling of jpg and png files
-  SCREENSHOT
+  <img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/>
   - The point cloud editor is dedicated to the labeling of point clouds by creating objetcts made of subsets of
   3D points
-  SCREENSHOT
+  <img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D3.jpg"/>
 
 
 ### Using the bitmap image editor
