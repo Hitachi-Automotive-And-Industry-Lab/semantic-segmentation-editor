@@ -70,13 +70,15 @@ the sets of classes available in the tool.
 ## How to use
 
 The editor is built around 3 different screens:
-  - The file navigator let's you browse available files to select a bitmap images or a point cloud for labeling
-  <img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/CaptureN1.jpg"/>
-  - The bitmap image editor is dedicated to the labeling of jpg and png files
-  <img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/>
-  - The point cloud editor is dedicated to the labeling of point clouds by creating objetcts made of subsets of
-  3D points
-  <img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D3.jpg"/>
+
+The file navigator let's you browse available files to select a bitmap images or a point cloud for labeling
+<img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/CaptureN1.jpg"/>
+  
+The bitmap image editor is dedicated to the labeling of jpg and png files by drawing polygons
+<img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/>
+
+The point cloud editor is dedicated to the labeling of point clouds by creating objects made of subsets of 3D points
+<img width="300" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D3.jpg"/>
 
 
 ### Using the bitmap image editor
