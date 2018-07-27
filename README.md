@@ -8,6 +8,8 @@ It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactj
 
 Bitmap Image Editor
 
+VIDEO: [Bitmap labeling overview](https://vimeo.com/282003466)
+
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/></a>
 
