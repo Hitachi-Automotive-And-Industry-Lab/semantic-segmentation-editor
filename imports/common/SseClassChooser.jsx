@@ -88,16 +88,11 @@ export default class SseClassChooser extends SseToolbar {
         this.setState(o);
     }
 
-    sendMsg(name, argument, idx) {
-        if (name == "mute" || name == "solo") {
-            if (this.state.counters[argument.classIndex] ||
-                (!this.state.counters[argument.classIndex] && this.state[name + idx])) {
-                this.toggleButton(name, idx);
-                super.sendMsg(name, argument);
-            }
-        }
-        else {
-            super.sendMsg(name, argument);
+    muteOrSolo(name, argument, idx) {
+        if (this.state.counters[argument.classIndex] ||
+            (!this.state.counters[argument.classIndex] && this.state[name + idx])) {
+            this.toggleButton(name, idx);
+            this.sendMsg(name, argument);
         }
     }
 
@@ -197,8 +192,7 @@ export default class SseClassChooser extends SseToolbar {
                                         "color": SseGlobals.computeTextColor(objDesc.color),
                                         "border": isSelected ? "solid 1px #E53935" : "solid 1px black",
                                         "padding": "0 3px"
-                                    }}
-                        >
+                                    }}>
                             <div
                                 className="hflex flex-align-items-center w100">
                                 {this.getIcon(objDesc)}{objDesc.label}
@@ -208,12 +202,12 @@ export default class SseClassChooser extends SseToolbar {
                         {this.props.mode == "3d" ?
                             <div className="hflex">
                                 <IconButton
-                                    onClick={() => this.sendMsg("mute", objDesc, idx)}
+                                    onClick={() => this.muteOrSolo("mute", objDesc, idx)}
                                     style={this.state["mute" + idx] ? smallIconSelected : smallIconStyle}>
                                     <EyeOff/>
                                 </IconButton>
                                 <IconButton
-                                    onClick={() => this.sendMsg("solo", objDesc, idx)}
+                                    onClick={() => this.muteOrSolo("solo", objDesc, idx)}
                                     style={this.state["solo" + idx] ? smallIconSelected : smallIconStyle}>
                                     <Eye/>
                                 </IconButton>
@@ -224,7 +218,6 @@ export default class SseClassChooser extends SseToolbar {
                 <Button onClick={() => this.initSetChange()}>Classes Sets</Button>
                 {this.renderDialog()}
             </div>
-
         );
     }
 }
