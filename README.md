@@ -6,9 +6,11 @@ It supports images (.jpg and .png files) and point clouds (.pcd files).
 It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactjs.org),
 [Paper.js](http://paperjs.org/) and [three.js](https://threejs.org/).
 
-Bitmap Image Editor
-
 VIDEO: [Bitmap labeling overview](https://vimeo.com/282003466)
+
+VIDEO: [Point cloud labeling overview](https://vimeo.com/282222626)
+
+Bitmap Image Editor
 
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/></a>
