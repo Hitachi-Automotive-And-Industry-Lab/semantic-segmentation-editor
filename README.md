@@ -15,14 +15,10 @@ Bitmap Image Editor
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/></a>
 
-(click images to zoom)
-
 PCD Point Cloud Editor
 
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.jpg"/></a>
-
-(click images to zoom)
 
 ## How to run
 
@@ -30,10 +26,10 @@ PCD Point Cloud Editor
 git clone https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor
 cd semantic-segmentation-editor
 ```
-__Change 'input-folder' and 'output-folder' according to your needs in config.json__
+__Change 'input-folder' and 'output-folder' according to your needs in settings.json__
 ```
 meteor npm install
-meteor
+meteor --settings settings.json
 ```
 
 Like any Meteor app, the editor will run by default on `http://localhost:3000` (-p to change the port)
@@ -42,7 +38,7 @@ Check [Meteor Environment Variables](https://docs.meteor.com/environment-variabl
 (`MONGO_URL`, `DISABLE_WEBSOCKETS`, etc...)
 
 
-## Configuration File: config.json
+## Configuration File: settings.json
 Modifying this file let's you configure where are stored data of the app as well as
 the sets of classes available in the tool.
 ```
