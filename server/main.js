@@ -69,7 +69,7 @@ Meteor.methods({
     'images'(folder, pageIndex, pageLength) {
         pageIndex = parseInt(pageIndex);
         pageLength = parseInt(pageLength);
-        const folderSlash = folder ? decodeURIComponent(folder) + "/" : "";
+        const folderSlash = folder ? decodeURIComponent(folder) + "/" : "/";
 
         const isDirectory = source => lstatSync(source).isDirectory();
         const isImage = source => {
