@@ -37,6 +37,16 @@ Like any Meteor app, the editor will run by default on `http://localhost:3000` (
 Check [Meteor Environment Variables](https://docs.meteor.com/environment-variables.html) to configure your app
 (`MONGO_URL`, `DISABLE_WEBSOCKETS`, etc...)
 
+### Running the app using Docker
+
+A Docker image is available at https://hub.docker.com/r/hitachiail/semantic-segmentation-editor/
+
+To run it:
+```
+docker pull hitachiail/semantic-segmentation-editor
+docker run -it -p PORT:3000 -v INPUT_FOLDER:/mnt/images -v OUTPUT_FOLDER:/mnt/pcd hitachiail/semantic-segmentation-editor:latest
+```
+Replace <code>PORT</code>, <code>INPUT_FOLDER</code> and <code>OUTPUT_FOLDER</code> according to your needs.
 
 ## Configuration File: settings.json
 Modifying this file let's you configure where are stored data of the app as well as
