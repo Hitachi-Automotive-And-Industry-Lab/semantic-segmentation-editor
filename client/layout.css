@@ -77,6 +77,10 @@
     height: 100%;
 }
 
+.h0 {
+    height: 0;
+}
+
 .absolute {
     position: absolute;
 }

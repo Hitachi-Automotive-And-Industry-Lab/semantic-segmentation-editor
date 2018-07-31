@@ -62,7 +62,7 @@ export default class SseApp3d extends React.Component {
                     <div className="w100 h100 editor">
                         <div className="vflex w100 h100 box1">
                             <SseToolbar3d/>
-                            <div className="hflex grow box2">
+                            <div className="hflex grow box2 h0">
                                 <SseClassChooser
                                     mode="3d"
                                     classesSets={this.classesSets
