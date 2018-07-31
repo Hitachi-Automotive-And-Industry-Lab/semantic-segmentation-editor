@@ -1,11 +1,8 @@
 {
   "configuration": {
-    "input-folder": "XXXXX", // The root folder containing images and PCD files
-    "output-folder": "XXXXX" // Segmentation data (only 3D) will be stored in this folder
+    "input-folder": "XXXXX",
+    "output-folder": "XXXXX"
   },
-  // The different sets of classes available in the tool
-  // For object classes, only the 'label' field is mandatory
-  // The icon field can be set with an icon from the mdi-material-ui package
   "sets-of-classes": [
     {
       "name": "Cityscapes", "objects": [
