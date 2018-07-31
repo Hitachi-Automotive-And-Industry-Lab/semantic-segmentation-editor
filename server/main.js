@@ -106,7 +106,7 @@ Meteor.methods({
             }
         };
 
-        const leaf = config.imagesFolder + "/" + (folderSlash ? folderSlash : "");
+        const leaf = join(config.imagesFolder, (folderSlash ? folderSlash : ""));
         const dirs = getDirectories(leaf);
         const images = getImages(leaf);
         const res = {
