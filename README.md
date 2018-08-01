@@ -10,12 +10,16 @@ VIDEO: [Bitmap labeling overview](https://vimeo.com/282003466)
 
 VIDEO: [Point cloud labeling overview](https://vimeo.com/282222626)
 
-Bitmap Image Editor
+## Bitmap Image Editor
+
+:rocket: [DEMO: Bitmap editor](http://sse.hup.li/edit/%2Fsamples%2Fbitmap.png)
 
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/></a>
 
-PCD Point Cloud Editor
+## PCD Point Cloud Editor
+
+:rocket: [DEMO: Point cloud editor](http://sse.hup.li/edit/%2Fsamples%2Fpointcloud.pcd)
 
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.jpg"/></a>
@@ -27,6 +31,9 @@ git clone https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmen
 cd semantic-segmentation-editor
 ```
 __Change 'input-folder' and 'output-folder' according to your needs in settings.json__
+
+On Windows, use '/' separators, example "c:/Users/john/images"
+
 ```
 meteor npm install
 meteor --settings settings.json
