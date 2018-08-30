@@ -44,6 +44,8 @@ Like any Meteor app, the editor will run by default on `http://localhost:3000` (
 Check [Meteor Environment Variables](https://docs.meteor.com/environment-variables.html) to configure your app
 (`MONGO_URL`, `DISABLE_WEBSOCKETS`, etc...)
 
+__Warning: This project runs on Meteor 1.6, Meteor 1.7 is currently NOT supported__
+
 ### Running the app using Docker
 
 A Docker image is available at https://hub.docker.com/r/hitachiail/semantic-segmentation-editor/
