@@ -3,7 +3,8 @@ import Paper from "paper";
 import simplify from "simplify-js";
 
 export default class SsePolygonTool extends SseTool {
-    init() {
+    constructor(editor) {
+        super(editor);
         this.editingPath = null; // The currently editing path
         this.readyToClose = null; // True if the mouse position makes the polygon ready to close
         this.isDrawing = null; // True if a polygon is being created
@@ -14,6 +15,7 @@ export default class SsePolygonTool extends SseTool {
         this.minDistance = 0;
         this.doubleClickTiming = 300;
         this.cursor = "crosshair";
+        this.bindCallbacks();
     }
 
     onMouseDrag(event) {

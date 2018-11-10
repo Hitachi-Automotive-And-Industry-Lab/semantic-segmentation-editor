@@ -12,13 +12,12 @@ export default class SseText extends React.Component {
 
     componentDidMount() {
         this.onMsg(this.props.msgKey, arg => {
-            if (!this.tooLate)
                 return arg ? this.setState(arg) : this.setState({message: ""})
         });
     }
 
-    componentWillUnmount() {
-        this.tooLate = true;
+    componentWillUnmount(){
+        SseMsg.unregister(this);
     }
 
     render() {

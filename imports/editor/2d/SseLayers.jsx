@@ -46,6 +46,10 @@ export default class SseLayers extends React.Component {
         })
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     toggle(idx) {
         let visible = this.state.layers[this.state.layers.length - 1 - idx].visible =
             !this.state.layers[this.state.layers.length - 1 - idx].visible;

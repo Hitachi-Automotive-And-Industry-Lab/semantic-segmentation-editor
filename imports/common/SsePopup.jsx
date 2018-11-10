@@ -38,6 +38,10 @@ class SsePopup extends React.Component {
         })
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     state = {
         open: false,
     };

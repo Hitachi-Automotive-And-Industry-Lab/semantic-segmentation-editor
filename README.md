@@ -1,8 +1,8 @@
 # Semantic Segmentation Editor
 
-A web based labeling editor dedicated to the creation of training data for machine learning.
+A web based labeling tool for creating AI training data sets (2D and 3D).
 The tool has been developed in the context of autonomous driving research.
-It supports images (.jpg and .png files) and point clouds (.pcd files).
+It supports images (.jpg or .png) and point clouds (.pcd).
 It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactjs.org),
 [Paper.js](http://paperjs.org/) and [three.js](https://threejs.org/).
 
@@ -26,29 +26,42 @@ It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactj
 
 ## How to run
 
+#### Install Meteor (OSX or Linux) 
+
 ```shell
-git clone https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor
-cd semantic-segmentation-editor
+curl https://install.meteor.com/ | sh
 ```
-__Change 'input-folder' and 'output-folder' according to your needs in settings.json__
 
-On Windows, use '/' separators, example "c:/Users/john/images"
+or download [Meteor Windows Installer](http://www.meteor.com/install)
 
-```
+#### Download and unzip latest version
+[Download](https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/archive/1.1.0.zip) v1.1.0
+
+### Start the application
+```shell
+cd semantic-segmentation-editor-1.1.0
 meteor npm install
-meteor --settings settings.json
+meteor npm start
 ```
 
-Like any Meteor app, the editor will run by default on `http://localhost:3000` (-p to change the port)
+
+The editor will run by default on `http://localhost:3000`
+
+__(Optional) Edit settings.json__
+ 
+ By default, images are served from <code>~/sse-images</code> and pointcloud binary segmentation data are stored in <code>~/sse-internal</code>.
+ You can configure these folders in settings.json by modifying <code>images-folder</code> and <code>internal-folder</code> properties. 
+On Windows, use '/' separators, example <code>c:/Users/john/images</code>
+
+
 
 Check [Meteor Environment Variables](https://docs.meteor.com/environment-variables.html) to configure your app
 (`MONGO_URL`, `DISABLE_WEBSOCKETS`, etc...)
 
-__Warning: This project runs on Meteor 1.6, Meteor 1.7 is currently NOT supported__
 
 ### Running the app using Docker
 
-A Docker image is available at https://hub.docker.com/r/hitachiail/semantic-segmentation-editor/
+A Docker image of  v1.0.0 is available [here](https://hub.docker.com/r/hitachiail/semantic-segmentation-editor/)
 
 To run it:
 ```
@@ -58,13 +71,12 @@ docker run -it -p PORT:3000 -v INPUT_FOLDER:/mnt/images -v OUTPUT_FOLDER:/mnt/pc
 Replace <code>PORT</code>, <code>INPUT_FOLDER</code> and <code>OUTPUT_FOLDER</code> according to your needs.
 
 ## Configuration File: settings.json
-Modifying this file let's you configure where are stored data of the app as well as
-the sets of classes available in the tool.
+
 ```
 {
   "configuration": {
-    "input-folder": "/mnt/images", // The root folder containing images and PCD files
-    "output-folder": "/mnt/pointcloud" // Segmentation data (only 3D) will be stored in this folder
+    "images-folder": "/mnt/images", // The root folder containing images and PCD files
+    "internal-folder": "/mnt/pointcloud_data" // Segmentation data (only 3D) will be stored in this folder
   },
   // The different sets of classes available in the tool
   // For object classes, only the 'label' field is mandatory

@@ -49,6 +49,10 @@ export default class SseFloodPanel extends React.Component {
         });
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     render() {
         return (
             <div>

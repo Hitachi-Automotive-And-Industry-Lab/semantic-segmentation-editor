@@ -1,12 +1,29 @@
 {
   "name": "semantic-segmentation-editor",
-  "private": true,
+  "version": "1.1.0",
+  "description": "A web based labeling tool for creating AI training data sets (2D and 3D)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor.git"
+  },
+  "keywords": [
+    "labeling",
+    "ai",
+    "machine_learning"
+  ],
+  "author": "Damien Mandrioli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/issues"
+  },
+  "homepage": "https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor",
   "scripts": {
-    "start": "meteor run"
+    "debug": "meteor --settings settings.json",
+    "start": "meteor --settings settings.json --production"
   },
   "dependencies": {
-    "@babel/runtime": "7.0.0-beta.55",
-    "@material-ui/core": "1.2.0",
+    "@babel/runtime": "7.1.5",
+    "@material-ui/core": "1.5.1",
     "@material-ui/icons": "1.1.0",
     "@tweenjs/tween.js": "17.2.0",
     "acorn": "5.7.1",
@@ -15,6 +32,7 @@
     "color": "3.0.0",
     "color-scheme": "1.0.1",
     "core-js": "2.5.7",
+    "download": "7.1.0",
     "fastintcompression": "0.0.2",
     "file-saver": "1.3.8",
     "filesize": "3.6.1",
@@ -23,13 +41,13 @@
     "lineclip": "1.1.5",
     "mdi-material-ui": "5.1.1",
     "mousetrap": "1.6.2",
-    "paper": "0.11.5",
+    "paper": "0.11.8",
     "point-in-polygon-extended": "0.0.1",
     "polybooljs": "1.2.0",
     "postal": "2.0.5",
     "rc-slider": "8.6.1",
-    "react": "16.3.0",
-    "react-dom": "16.3.3",
+    "react": "16.6.1",
+    "react-dom": "16.6.1",
     "react-router": "4.2.0",
     "react-router-dom": "4.2.2",
     "serve-static": "1.13.2",

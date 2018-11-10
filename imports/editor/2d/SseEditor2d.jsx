@@ -1075,6 +1075,10 @@ export default class SseEditor2d extends React.Component {
 
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     updateLayers() {
         this.mainLayer.children.forEach(pol => {
             pol.fullySelected = false;

@@ -27,8 +27,6 @@ export default class SseNavigatorToolbar extends React.Component {
 
             let res = [{name: "Home", browseUrl: "/browse/0/20/"}];
             let data;
-            if (bd.length == 1)
-                bd[0].name = "Home";
 
             bd.forEach(itm => {
                     if (itm != "") {

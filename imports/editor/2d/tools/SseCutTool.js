@@ -5,12 +5,14 @@ import SseGlobals from "../../../common/SseGlobals";
 
 export default class SseCutTool extends SseTool {
 
-    init() {
+    constructor(editor) {
+        super(editor);
         this.minDistance = 0;
         this.segmentsFromDivision = new Set(); // Keep segments created on existing polygons to be able to cancel
         this.fromSegment = null;
         this.toSegment = null;
         this.adjustedPolygon = null;
+        this.bindCallbacks();
     }
 
     avoidCrossings() {

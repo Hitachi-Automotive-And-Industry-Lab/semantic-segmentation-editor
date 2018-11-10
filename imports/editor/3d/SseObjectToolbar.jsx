@@ -21,6 +21,10 @@ class SseObjectButton extends React.Component {
         });
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     positionIndicator(backgroundColor = "#56FE45") {
         const w = 15;
         const h = 15;

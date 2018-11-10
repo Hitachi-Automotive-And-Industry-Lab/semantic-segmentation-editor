@@ -1,4 +1,8 @@
 import {Meteor} from "meteor/meteor";
+import {join} from "path";
+import {mkdirSync, existsSync} from "fs";
+import os from "os";
+import download from "download";
 
 const configurationFile = {};
 const defaultClasses = [{
@@ -42,15 +46,23 @@ const init = ()=> {
     try {
         const config = Meteor.settings;
 
-        if (config.configuration && config.configuration["input-folder"]) {
-            configurationFile.imagesFolder = config.configuration["input-folder"].replace(/\/$/, "");
+        if (config.configuration && config.configuration["images-folder"] != "") {
+            configurationFile.imagesFolder = config.configuration["images-folder"].replace(/\/$/, "");
         }else{
-            configurationFile.imagesFolder = "/mnt/images";
+            configurationFile.imagesFolder = join(os.homedir(), "sse-images");
         }
-        if (config.configuration && config.configuration["output-folder"]) {
-            configurationFile.pointcloudsFolder = config.configuration["output-folder"].replace(/\/$/, "");
+
+        if (!existsSync(configurationFile.imagesFolder)){
+            mkdirSync(configurationFile.imagesFolder);
+            download("https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/public/samples/bitmap_labeling.png", configurationFile.imagesFolder);
+            download("https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/public/samples/pointcloud_labeling.pcd", configurationFile.imagesFolder);
+        }
+
+        if (config.configuration && config.configuration["internal-folder"] != "") {
+            configurationFile.pointcloudsFolder = config.configuration["internal-folder"].replace(/\/$/, "");
         }else{
-            configurationFile.pointcloudsFolder = "/mnt/pcd"
+
+            configurationFile.pointcloudsFolder = join(os.homedir(), "sse-internal");
         }
 
         configurationFile.setsOfClassesMap = new Map();
@@ -59,10 +71,10 @@ const init = ()=> {
             configurationFile.setsOfClasses = defaultClasses;
         }
         configurationFile.setsOfClasses.forEach(o => configurationFile.setsOfClassesMap.set(o.name, o));
-        console.log("Semantic Segmentation Editor");
-        console.log("Images (JPG, PNG, PCD) folder:", configurationFile.imagesFolder);
-        console.log("3D Segmentation Data folder:", configurationFile.pointcloudsFolder);
-        console.log(configurationFile.setsOfClasses.length + " sets of object classes");
+        console.log("Semantic Segmentation Editor v1.1.0");
+        console.log("Images (JPG, PNG, PCD) served from", configurationFile.imagesFolder);
+        console.log("PCD binary segmentation data stored in", configurationFile.pointcloudsFolder);
+        console.log("Number of available sets of object classes:", configurationFile.setsOfClasses.length);
         return configurationFile;
     }catch(e){
         console.error("Error while parsing settings.json:", e);

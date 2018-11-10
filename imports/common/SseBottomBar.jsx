@@ -33,6 +33,10 @@ class SseBottomBar extends React.Component {
         this.retriggerMsg("currentSample");
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     handleOpen = () => {
         this.setState({open: true});
         this.cancelTags = this.state.tags.concat();

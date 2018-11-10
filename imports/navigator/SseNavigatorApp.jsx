@@ -71,8 +71,12 @@ class SseNavigatorApp extends React.Component {
     }
 
     render() {
-        if (!this.state.data)
-            return null;
+        if (this.state.data == undefined)
+            return <div></div>
+
+        if (this.state.data.error){
+            return <div>{this.state.data.error}</div>
+        }
         return (
             <MuiThemeProvider theme={new SseTheme().theme}>
                 <div className="w100">

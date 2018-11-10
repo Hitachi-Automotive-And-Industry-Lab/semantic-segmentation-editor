@@ -165,7 +165,10 @@ export default class SseToolbar extends React.Component {
         });
         if (this.messages)
             this.messages();
+    }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
     }
 
 }

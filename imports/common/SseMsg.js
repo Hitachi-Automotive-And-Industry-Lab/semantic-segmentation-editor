@@ -47,6 +47,19 @@ export default class SseMsg {
         }).bind(obj);
     }
 
+    static unregister(obj) {
+        if (obj.subscription)
+            postal.unsubscribe(obj.subscription);
+        delete obj.subscription;
+        delete obj.actions;
+        delete obj.sendMsg;
+        delete obj.onMsg;
+        delete obj.forgetMsg;
+        delete obj.retriggerMsg;
+    }
+
+
+
     static saveLastMsg(key, arg) {
         if (!this.prototype.lastMessages) {
             this.prototype.lastMessages = new Map();

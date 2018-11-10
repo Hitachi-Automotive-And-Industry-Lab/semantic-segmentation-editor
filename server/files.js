@@ -10,7 +10,10 @@ Meteor.startup(() => {
 
 const {imagesFolder, pointcloudsFolder} = configurationFile;
     WebApp.connectHandlers.use("/file", serveStatic(imagesFolder, {fallthrough: false}));
-    WebApp.connectHandlers.use("/datafile", serveStatic(pointcloudsFolder, {fallthrough: false}));
+    WebApp.connectHandlers.use("/datafile", serveStatic(pointcloudsFolder, {fallthrough: true}));
+    WebApp.connectHandlers.use("/datafile", (req,res)=>{
+        res.end("");
+    });
 
     WebApp.connectHandlers.use(bodyParser.raw({limit: "200mb", type: 'application/octet-stream'}));
     WebApp.connectHandlers.use('/save', function (req, res) {

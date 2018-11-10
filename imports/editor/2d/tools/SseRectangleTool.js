@@ -3,7 +3,8 @@ import Paper from "paper";
 
 export default class SseRectangleTool extends SseTool {
 
-    init() {
+    constructor(editor) {
+        super(editor);
         this.editingPath = null; // The path currently created
         this.editingPoint = null; // The second point for defining a rectangle
         this.isDrawing = null; // True if a polygon is being created
@@ -11,7 +12,9 @@ export default class SseRectangleTool extends SseTool {
         this.editingFeature = null; // Plain object to store the new polygon attributes
         this.minDistance = 0;
         this.cursor = "crosshair";
+        this.bindCallbacks();
     }
+
 
     cancel() {
         if (!this.editingPath) {

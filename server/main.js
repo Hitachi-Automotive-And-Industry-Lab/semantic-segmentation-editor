@@ -1,5 +1,5 @@
 import {Meteor} from 'meteor/meteor';
-import {createWriteStream, lstatSync, readdirSync, readFile, readFileSync} from "fs";
+import {createWriteStream, lstatSync, readdirSync, readFile, readFileSync, existsSync} from "fs";
 import {basename, extname, join} from "path";
 import url from "url";
 import ColorScheme from "color-scheme";
@@ -51,26 +51,22 @@ Meteor.methods({
         });
         return data;
     },
-/*
-    'rebuildTagList'() {
-        const all = SseSamples.find().fetch();
-        const tags = new Set();
-        all.forEach(s => {
-            if (s.tags) {
-                s.tags.forEach(t => {
-                    tags.add(t)
-                })
-            }
-        });
-        SseProps.remove({});
-        SseProps.upsert({key: "tags"}, {key: "tags", value: Array.from(tags)});
-    },
-*/
+    /*
+        'rebuildTagList'() {
+            const all = SseSamples.find().fetch();
+            const tags = new Set();
+            all.forEach(s => {
+                if (s.tags) {
+                    s.tags.forEach(t => {
+                        tags.add(t)
+                    })
+                }
+            });
+            SseProps.remove({});
+            SseProps.upsert({key: "tags"}, {key: "tags", value: Array.from(tags)});
+        },
+    */
     'images'(folder, pageIndex, pageLength) {
-        pageIndex = parseInt(pageIndex);
-        pageLength = parseInt(pageLength);
-        const folderSlash = folder ? decodeURIComponent(folder) + "/" : "/";
-
         const isDirectory = source => lstatSync(source).isDirectory();
         const isImage = source => {
             const stat = lstatSync(source);
@@ -83,8 +79,6 @@ Meteor.methods({
                     extname(source).toLowerCase() == ".png"
                 )
         };
-
-
         const getDirectories = source =>
             readdirSync(source).map(name => join(source, name)).filter(isDirectory).map(a => basename(a));
 
@@ -106,7 +100,20 @@ Meteor.methods({
             }
         };
 
+        pageIndex = parseInt(pageIndex);
+        pageLength = parseInt(pageLength);
+        const folderSlash = folder ? decodeURIComponent(folder) + "/" : "/";
         const leaf = join(config.imagesFolder, (folderSlash ? folderSlash : ""));
+
+        const existing = existsSync(leaf);
+
+        if (existing && !isDirectory(leaf)) {
+            return {error: leaf + " is a file but should be a folder. Check the documentation and your settings.json"};
+        }
+        if (!existing) {
+            return {error: leaf + " does not exists. Check the documentation and your settings.json"};
+        }
+
         const dirs = getDirectories(leaf);
         const images = getImages(leaf);
         const res = {
@@ -121,6 +128,7 @@ Meteor.methods({
         if (pageIndex > 0) {
             res.previousPage = `/browse/${pageIndex - 1}/${pageLength}/` + encodeURIComponent(folder);
         }
+
         return res;
     },
 

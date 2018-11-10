@@ -28,12 +28,17 @@ function imagesListing(req, res, next) {
 }
 
 function generateJson(req, res, next) {
+    res.setHeader('Content-Type', 'application/json');
     const item = SseSamples.findOne({url: req.url});
-    const soc = setsOfClassesMap.get(item.socName);
-    item.objects.forEach(obj=>{
-        obj.label = soc.objects[obj.classIndex].label;
-    });
-    res.end(JSON.stringify(item, null, 1));
+    if (item) {
+        const soc = setsOfClassesMap.get(item.socName);
+        item.objects.forEach(obj => {
+            obj.label = soc.objects[obj.classIndex].label;
+        });
+        res.end(JSON.stringify(item, null, 1));
+    }else{
+        res.end("{}");
+    }
 }
 
 function generatePCDOutput(req, res, next) {

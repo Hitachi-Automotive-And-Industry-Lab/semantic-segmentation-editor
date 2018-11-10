@@ -6,6 +6,24 @@ import SseMsg from "../../../common/SseMsg";
 
 export default class SseFloodTool extends SseTool {
 
+    constructor(editor) {
+        super(editor);
+        this.colorThreshold = 15;
+        this.blurRadius = 5;
+        this.imageInfo = null;
+        this.mask = null;
+        this.downPoint = null;
+        this.polygon = null;
+        SseMsg.register(this);
+        this.onMsg("flood-properties", (arg) => {
+            this.colorThreshold = arg.threshold;
+            this.blurRadius = arg.blurRadius;
+            this.process();
+        });
+        this.cursor = "crosshair";
+        this.bindCallbacks();
+    }
+
     initCanvas(img) {
         const cvs = document.getElementById("filterCanvas");
         const cvs2 = document.getElementById("rasterCanvas");
@@ -100,21 +118,7 @@ export default class SseFloodTool extends SseTool {
         this.process();
     }
 
-    init() {
-        this.colorThreshold = 15;
-        this.blurRadius = 5;
-        this.imageInfo = null;
-        this.mask = null;
-        this.downPoint = null;
-        this.polygon = null;
-        SseMsg.register(this);
-        this.onMsg("flood-properties", (arg) => {
-            this.colorThreshold = arg.threshold;
-            this.blurRadius = arg.blurRadius;
-            this.process();
-        });
-        this.cursor = "crosshair";
-    }
+
 
     onMouseMove(event) {
         this.editor.zoomPoint = event.point;

@@ -125,6 +125,10 @@ export default class SseSliderPanel extends React.Component {
 
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     render() {
         return (
             <div className="sse-sliders vflex">

@@ -520,6 +520,10 @@ export default class SseEditor3d extends React.Component {
         }));
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     downloadFile() {
         window.open("/api/pcdfile" + this.props.imageUrl, "_blank");
     }

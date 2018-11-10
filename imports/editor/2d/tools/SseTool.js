@@ -1,23 +1,29 @@
 import Paper from "paper";
 import SseGlobals from "../../../common/SseGlobals";
 
-export default class SseTools extends Paper.Tool {
+export default class SseTools {
     constructor(app2d) {
-        super();
         this.editor = app2d;
-        this.init();
-    }
-
-    init() {
-
+        this.paperTool = new Paper.Tool();
     }
 
     activate() {
         if (Paper.tool && Paper.tool.cancel)
             Paper.tool.cancel(true);
-        super.activate();
+        this.paperTool.activate();
         if (this.editor)
             SseGlobals.setCursor(this.cursor || "default");
+    }
+
+    remove(){
+        this.paperTool.remove();
+    }
+
+    bindCallbacks(){
+        ["onMouseDown","onMouseUp","onMouseMove","onMouseDrag", "onKeyDown", "onKeyUp"].forEach(callback=>{
+            if (typeof this[callback] == "function")
+                this.paperTool[callback] = this[callback].bind(this);
+        })
     }
 
     isLeftButton(event) {

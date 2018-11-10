@@ -29,6 +29,10 @@ export default class SseConfirmationDialog extends React.Component {
         this.onMsg(this.props.startMessage, () => this.setState({open: true}))
     }
 
+    componentWillUnmount(){
+        SseMsg.unregister(this);
+    }
+
     render() {
         return (
             <Dialog open={this.state.open}>

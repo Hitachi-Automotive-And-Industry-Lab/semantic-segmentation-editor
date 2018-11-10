@@ -133,7 +133,10 @@ export default class SseDataManager {
                 } else {
                     worker.addEventListener("message", (arg) => {
                         if (arg.data.operation == "uncompress") {
-                            res(arg.data.result);
+                            if (arg.data.result)
+                                res(arg.data.result);
+                            else
+                                rej()
                         }
                     });
                     worker.postMessage({operation: "uncompress", data: oReq.response});
@@ -141,7 +144,7 @@ export default class SseDataManager {
             };
             oReq.send("nothing");
         });
-        prom.then(() => worker.terminate());
+        prom.then(() => worker.terminate(), ()=>(0/* Silent catch */));
         return prom;
     }
 }

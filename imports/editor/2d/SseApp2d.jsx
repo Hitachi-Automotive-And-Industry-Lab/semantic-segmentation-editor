@@ -54,14 +54,13 @@ export default class SseApp2d extends React.Component {
         this.setupTooltips();
         const sourceImage = $("#sourceImage");
         sourceImage.on("load", () => {
-            if (!this.tooLate)
                 this.setState({imageReady: true});
         });
         sourceImage.attr("src", SseGlobals.getFileUrl(this.props.imageUrl));
     }
 
     componentWillUnmount() {
-        this.tooLate = true;
+        $("#sourceImage").off();
     }
 
     render() {

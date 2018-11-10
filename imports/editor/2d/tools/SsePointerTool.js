@@ -5,8 +5,10 @@ import SseGlobals from "../../../common/SseGlobals";
 
 export default class SsePointerTool extends SseTool {
 
-    init() {
+    constructor(editor) {
+        super(editor);
         this.minDistance = 0;
+        this.bindCallbacks();
     }
 
     onKeyDown(event) {
