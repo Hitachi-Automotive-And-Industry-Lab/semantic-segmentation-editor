@@ -54,8 +54,8 @@ const init = ()=> {
 
         if (!existsSync(configurationFile.imagesFolder)){
             mkdirSync(configurationFile.imagesFolder);
-            download("https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/public/samples/bitmap_labeling.png", configurationFile.imagesFolder);
-            download("https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/public/samples/pointcloud_labeling.pcd", configurationFile.imagesFolder);
+            download("https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/private/samples/bitmap_labeling.png", configurationFile.imagesFolder);
+            download("https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/private/samples/pointcloud_labeling.pcd", configurationFile.imagesFolder);
         }
 
         if (config.configuration && config.configuration["internal-folder"] != "") {

@@ -34,8 +34,7 @@ curl https://install.meteor.com/ | sh
 
 or download [Meteor Windows Installer](http://www.meteor.com/install)
 
-#### Download and unzip latest version
-[Download](https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/archive/1.1.0.zip) v1.1.0
+#### Download and unzip latest version from [here](https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/releases)
 
 #### Start the application
 ```shell
