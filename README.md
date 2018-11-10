@@ -37,7 +37,7 @@ or download [Meteor Windows Installer](http://www.meteor.com/install)
 #### Download and unzip latest version
 [Download](https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/archive/1.1.0.zip) v1.1.0
 
-### Start the application
+#### Start the application
 ```shell
 cd semantic-segmentation-editor-1.1.0
 meteor npm install
