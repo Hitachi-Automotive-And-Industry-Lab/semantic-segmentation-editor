@@ -38,7 +38,7 @@ or download [Meteor Windows Installer](http://www.meteor.com/install)
 
 #### Start the application
 ```shell
-cd semantic-segmentation-editor-1.1.0
+cd semantic-segmentation-editor-x.x.x
 meteor npm install
 meteor npm start
 ```
