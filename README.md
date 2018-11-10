@@ -49,7 +49,7 @@ The editor will run by default on `http://localhost:3000`
 
 __(Optional) Edit settings.json__
  
- By default, images are served from <code>~/sse-images</code> and pointcloud binary segmentation data are stored in <code>~/sse-internal</code>.
+ By default, images are served from <code>your_home_dir/sse-images</code> and pointcloud binary segmentation data are stored in <code>your_home_dir/sse-internal</code>.
  You can configure these folders in settings.json by modifying <code>images-folder</code> and <code>internal-folder</code> properties. 
 On Windows, use '/' separators, example <code>c:/Users/john/images</code>
 
