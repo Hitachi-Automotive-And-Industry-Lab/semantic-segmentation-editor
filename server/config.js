@@ -71,7 +71,7 @@ const init = ()=> {
             configurationFile.setsOfClasses = defaultClasses;
         }
         configurationFile.setsOfClasses.forEach(o => configurationFile.setsOfClassesMap.set(o.name, o));
-        console.log("Semantic Segmentation Editor v1.1.0");
+        console.log("Semantic Segmentation Editor");
         console.log("Images (JPG, PNG, PCD) served from", configurationFile.imagesFolder);
         console.log("PCD binary segmentation data stored in", configurationFile.pointcloudsFolder);
         console.log("Number of available sets of object classes:", configurationFile.setsOfClasses.length);
