@@ -67,6 +67,12 @@ To run it:
 docker pull hitachiail/semantic-segmentation-editor
 docker run -it -p PORT:3000 -v INPUT_FOLDER:/mnt/images -v OUTPUT_FOLDER:/mnt/pcd hitachiail/semantic-segmentation-editor:latest
 ```
+
+To run with custom settings.json:
+```
+docker run -it -e METEOR_SETTINGS="$(cat settings.json)" -p PORT:3000 -v INPUT_FOLDER:/mnt/images -v OUTPUT_FOLDER:/mnt/pcd hitachiail/semantic-segmentation-editor:latest
+```
+
 Replace <code>PORT</code>, <code>INPUT_FOLDER</code> and <code>OUTPUT_FOLDER</code> according to your needs.
 
 ## Configuration File: settings.json
