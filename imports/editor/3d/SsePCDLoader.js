@@ -112,6 +112,8 @@ export default class SsePCDLoader {
                 var color = [];
                 var label = [];
                 var intensity = [];
+                var error = [];
+                var polar = [];
                 var payload = [];
 
                 if (PCDheader.data === 'ascii') {
@@ -157,6 +159,18 @@ export default class SsePCDLoader {
                         color.push(0);
                         color.push(0);
                         
+                        // Write Polar Coordinates
+                        var _distance     = parseFloat(line[offset.distance])    || 0;
+                        var _azimuth      = parseFloat(line[offset.azimuth])     || 0;
+                        var _inclination  = parseFloat(line[offset.inclination]) || 0;
+                        polar.push(_distance);
+                        polar.push(_azimuth);
+                        polar.push(_inclination);
+                        
+                        // Push error-value
+                        var _error  = parseFloat(line[offset.error]) || 0;
+                        error.push(_error);
+                         			
                         // Push Intensity
                         var _intensity = parseFloat(line[offset.intensity]) || 0;
                         //item.intensity = _intensity
@@ -190,7 +204,7 @@ export default class SsePCDLoader {
                 name = name[1].split('').reverse().join('');
                 mesh.name = url;
 
-                return {position, label, intensity, header: PCDheader};
+                return {position, label, polar, intensity, error, header: PCDheader};
 
             }
 

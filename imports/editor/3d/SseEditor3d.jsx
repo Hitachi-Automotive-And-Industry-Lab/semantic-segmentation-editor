@@ -1953,6 +1953,9 @@ export default class SseEditor3d extends React.Component {
         
         const colorArray = [];
         if (this.DisplayIntensity){ 
+            // TODO Set DisplayIntensity via Button
+            // TODO Fill colorArray Via FIELD intensity
+            // TODO create a good ampping intensity
             // Here we can insert our color-scheme
             if (intensityArray) {
                 intensityArray.forEach((v, i) => {

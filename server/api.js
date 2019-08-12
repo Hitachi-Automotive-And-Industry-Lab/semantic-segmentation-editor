@@ -64,10 +64,10 @@ function generatePCDOutput(req, res, next) {
         const head = pcdContent.header;
 
         let out = "VERSION .7\n";
-        out += "FIELDS x y z intensity label object\n";
-        out += "SIZE 4 4 4 4 4 4\n";
-        out += "TYPE F F F F I I\n";
-        out += "COUNT 1 1 1 1 1 1\n";
+        out += "FIELDS x y z distance azimuth inclination intensity error label object\n";
+        out += "SIZE 4 4 4 4 4 4 4 4 4 4\n";
+        out += "TYPE F F F F F F F F I I\n";
+        out += "COUNT 1 1 1 1 1 1 1 1 1 1\n";
         out += "WIDTH " + pcdContent.header.width + "\n";
         out += "HEIGHT " + pcdContent.header.height + "\n";
         out += "POINTS " + pcdContent.header.width*pcdContent.header.height + "\n";
@@ -110,7 +110,7 @@ function generatePCDOutput(req, res, next) {
 
                     switch (i % 3) {
                         case 0:
-                            obj = {intensity: pcdContent.intensity[position], x: v};
+                            obj = {distance: pcdContent.polar[position*3], azimuth: pcdContent.polar[position*3+1], inclination: pcdContent.polar[position*3+2], intensity: pcdContent.intensity[position], error: pcdContent.error[position], x: v};
                             break;
                         case 1:
                             obj.y = v;
@@ -118,7 +118,8 @@ function generatePCDOutput(req, res, next) {
                         case 2:
                             obj.z = v;
                             out += obj.x + " " + obj.y + " " + obj.z + " ";
-                            out += obj.intensity + " ";
+                            out += obj.distance + " " + obj.azimuth + " " + obj.inclination + " ";
+                            out += obj.intensity + " " + obj.error + " ";
                             
                             out += labels[position] + " ";
                             const assignedObject = objectByPointIndex.get(position);
