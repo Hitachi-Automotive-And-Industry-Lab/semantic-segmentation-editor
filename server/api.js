@@ -62,15 +62,15 @@ function generatePCDOutput(req, res, next) {
         const pcdContent = loader.parse(content.toString(), "");
 
         const head = pcdContent.header;
-
+        const count = parseInt(pcdContent.position.length / 3);
         let out = "VERSION .7\n";
         out += "FIELDS x y z label object\n";
         out += "SIZE 4 4 4 4 4\n";
         out += "TYPE F F F I I\n";
         out += "COUNT 1 1 1 1 1\n";
-        out += "WIDTH " + pcdContent.position.length + "\n";
+        out += "WIDTH " + count + "\n";
         out += "HEIGHT 1\n";
-        out += "POINTS " + pcdContent.position.length + "\n";
+        out += "POINTS " + count + "\n";
         out += "VIEWPOINT " + head.viewpoint.tx;
         out += " " + head.viewpoint.ty;
         out += " " + head.viewpoint.tz;
