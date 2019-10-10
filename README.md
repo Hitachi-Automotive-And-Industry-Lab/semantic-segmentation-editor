@@ -10,7 +10,7 @@ It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactj
 
 :movie_camera: [VIDEO: Bitmap labeling overview](https://vimeo.com/282003466)
 
-:rocket: [DEMO: Bitmap editor](http://sse.hup.li/edit/%2Fsamples%2Fbitmap.png)
+:rocket: [DEMO: Bitmap editor](http://51.15.92.83/edit/%2Fbitmap_labeling.png)
 
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture2D2.jpg"/></a>
@@ -19,7 +19,7 @@ It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactj
 
 :movie_camera: [VIDEO: Point cloud labeling overview](https://vimeo.com/282222626)
 
-:rocket: [DEMO: Point cloud editor](http://sse.hup.li/edit/%2Fsamples%2Fpointcloud.pcd)
+:rocket: [DEMO: Point cloud editor](http://51.15.92.83/edit/%2Fpointcloud_labeling.pcd)
 
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D1.jpg"/></a>
 <a href="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.PNG"><img width="400" src="https://github.com/dmandrioli/sse-extra/raw/master/Capture3D2.jpg"/></a>
