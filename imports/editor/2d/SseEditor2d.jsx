@@ -13,7 +13,7 @@ import SseUndoRedo2d from "./SseUndoRedo2d";
 import SseZoom from "./SseZoom.js";
 import FileSaver from "file-saver";
 import SseMsg from "../../common/SseMsg";
-
+import $ from "jquery";
 
 export default class SseEditor2d extends React.Component {
     constructor(props) {

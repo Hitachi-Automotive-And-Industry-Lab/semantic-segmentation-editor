@@ -6,6 +6,8 @@ It supports images (.jpg or .png) and point clouds (.pcd).
 It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactjs.org),
 [Paper.js](http://paperjs.org/) and [three.js](https://threejs.org/).
 
+**New in version 1.2:** Support for binary and binary compressed point clouds (thanks @CecilHarvey)
+
 ## Bitmap Image Editor
 
 :movie_camera: [VIDEO: Bitmap labeling overview](https://vimeo.com/282003466)
@@ -57,17 +59,6 @@ On Windows, use '/' separators, example <code>c:/Users/john/images</code>
 Check [Meteor Environment Variables](https://docs.meteor.com/environment-variables.html) to configure your app
 (`MONGO_URL`, `DISABLE_WEBSOCKETS`, etc...)
 
-
-### Running the app using Docker
-
-A Docker image of  v1.0.0 is available [here](https://hub.docker.com/r/hitachiail/semantic-segmentation-editor/)
-
-To run it:
-```
-docker pull hitachiail/semantic-segmentation-editor
-docker run -it -p PORT:3000 -v INPUT_FOLDER:/mnt/images -v OUTPUT_FOLDER:/mnt/pcd hitachiail/semantic-segmentation-editor:latest
-```
-Replace <code>PORT</code>, <code>INPUT_FOLDER</code> and <code>OUTPUT_FOLDER</code> according to your needs.
 
 ## Configuration File: settings.json
 

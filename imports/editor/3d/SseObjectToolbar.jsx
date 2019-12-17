@@ -4,6 +4,7 @@ import {Close, Delete, MinusCircleOutline, Plus, PlusCircleOutline, Target} from
 import SseToolbar from "../../common/SseToolbar";
 import SseGlobals from "../../common/SseGlobals";
 import SseMsg from "../../common/SseMsg";
+import $ from "jquery";
 
 const UNDEFINED_CLASS = "Undefined Class";
 

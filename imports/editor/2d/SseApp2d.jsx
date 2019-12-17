@@ -20,6 +20,7 @@ import SseToolbar2d from "./SseToolbar2d";
 import SseSetOfClasses from "../../common/SseSetOfClasses";
 import SseTooltips2d from "./SseTooltips2d";
 import tippy from "tippy.js";
+import $ from "jquery";
 
 export default class SseApp2d extends React.Component {
 

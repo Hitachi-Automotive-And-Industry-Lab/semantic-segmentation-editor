@@ -7,6 +7,7 @@ import SseMsg from "./SseMsg";
 const disabled = "disabled";
 const enabled = "enabled";
 const highlighted = "highlighted";
+import $ from "jquery";
 
 export default class SseToolbar extends React.Component {
 

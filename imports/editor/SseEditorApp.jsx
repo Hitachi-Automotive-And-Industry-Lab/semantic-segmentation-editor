@@ -3,6 +3,7 @@ import {Meteor} from "meteor/meteor";
 import {withTracker} from 'meteor/react-meteor-data';
 import SseApp2d from "./2d/SseApp2d";
 import SseApp3d from "./3d/SseApp3d";
+import $ from "jquery";
 
 class SseEditorApp extends React.Component {
 

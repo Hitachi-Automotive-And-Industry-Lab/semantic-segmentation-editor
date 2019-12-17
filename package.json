@@ -1,6 +1,6 @@
 {
   "name": "semantic-segmentation-editor",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "A web based labeling tool for creating AI training data sets (2D and 3D)",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "start": "meteor --settings settings.json --production"
   },
   "dependencies": {
-    "@babel/runtime": "7.1.5",
+    "@babel/runtime": "7.7.6",
     "@material-ui/core": "1.5.1",
     "@material-ui/icons": "1.1.0",
     "@tweenjs/tween.js": "17.2.0",
@@ -38,6 +38,7 @@
     "filesize": "3.6.1",
     "hull.js": "0.2.10",
     "indexof": "0.0.1",
+    "jquery": "3.4.1",
     "lineclip": "1.1.5",
     "mdi-material-ui": "5.1.1",
     "mousetrap": "1.6.2",

@@ -17,7 +17,7 @@ import hull from "hull.js";
 import PolyBool from "polybooljs";
 import lineclip from "lineclip";
 import SseMsg from "../../common/SseMsg";
-
+import $ from "jquery";
 
 const PI = Math.PI;
 const DOUBLEPI = PI * 2;

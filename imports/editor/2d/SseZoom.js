@@ -1,4 +1,5 @@
 import Paper from "paper";
+import $ from "jquery";
 
 export default class SseZoom {
     constructor(editor) {
