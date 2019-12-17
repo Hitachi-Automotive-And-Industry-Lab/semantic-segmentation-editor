@@ -2000,7 +2000,12 @@ export default class SseEditor3d extends React.Component {
             this.dataManager.loadBinaryFile(this.props.imageUrl + ".labels")
                 .then(result => {
                     this.labelArray = result;
-                    this.maxClassIndex = Math.max(...this.labelArray);
+                    this.maxClassIndex = 0;
+                    for (var i = 0; i < this.labelArray.length; i++) {
+                        if (this.labelArray[i] > this.maxClassIndex) {
+                            this.maxClassIndex = this.labelArray[i];
+                        }
+                    }
                     this.sendMsg("maximum-classIndex", {value: this.maxClassIndex});
                 }, () => {
                     this.saveBinaryLabels();

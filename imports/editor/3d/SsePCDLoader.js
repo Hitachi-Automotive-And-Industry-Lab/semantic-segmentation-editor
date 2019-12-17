@@ -1,4 +1,4 @@
-// Based on three.js PCDLoader class (only support ASCII PCD files)
+// Based on three.js PCDLoader class
 export default class SsePCDLoader {
     constructor(THREE) {
         THREE.PCDLoader = function (serverMode) {
@@ -18,6 +18,44 @@ export default class SsePCDLoader {
             },
 
             parse: function (data, url) {
+                function decompressLZF( inData, outLength ) {
+                    // from https://gitlab.com/taketwo/three-pcd-loader/blob/master/decompress-lzf.js
+                    var inLength = inData.length;
+                    var outData = new Uint8Array( outLength );
+                    var inPtr = 0;
+                    var outPtr = 0;
+                    var ctrl;
+                    var len;
+                    var ref;
+                    do {
+                        ctrl = inData[ inPtr ++ ];
+                        if ( ctrl < ( 1 << 5 ) ) {
+                            ctrl ++;
+                            if ( outPtr + ctrl > outLength ) throw new Error( 'Output buffer is not large enough' );
+                            if ( inPtr + ctrl > inLength ) throw new Error( 'Invalid compressed data' );
+                            do {
+                                outData[ outPtr ++ ] = inData[ inPtr ++ ];
+                            } while ( -- ctrl );
+                        } else {
+                            len = ctrl >> 5;
+                            ref = outPtr - ( ( ctrl & 0x1f ) << 8 ) - 1;
+                            if ( inPtr >= inLength ) throw new Error( 'Invalid compressed data' );
+                            if ( len === 7 ) {
+                                len += inData[ inPtr ++ ];
+                                if ( inPtr >= inLength ) throw new Error( 'Invalid compressed data' );
+                            }
+                            ref -= inData[ inPtr ++ ];
+                            if ( outPtr + len + 2 > outLength ) throw new Error( 'Output buffer is not large enough' );
+                            if ( ref < 0 ) throw new Error( 'Invalid compressed data' );
+                            if ( ref >= outPtr ) throw new Error( 'Invalid compressed data' );
+                            do {
+                                outData[ outPtr ++ ] = outData[ ref ++ ];
+                            } while ( -- len + 2 );
+                        }
+                    } while ( inPtr < inLength );
+                    return outData;
+                }
+
                 function parseHeader(data) {
                     var PCDheader = {};
                     var result1 = data.search(/[\r\n]DATA\s(\S*)\s/i);
@@ -83,27 +121,19 @@ export default class SsePCDLoader {
                     var sizeSum = 0;
 
                     for (let i = 0, l = PCDheader.fields.length; i < l; i++) {
-
                         if (PCDheader.data === 'ascii') {
-
                             PCDheader.offset[PCDheader.fields[i]] = i;
-
                         } else {
-
                             PCDheader.offset[PCDheader.fields[i]] = sizeSum;
                             sizeSum += PCDheader.size[i];
-
                         }
-
                     }
                     return PCDheader;
-
                 }
 
-                var textData = this.serverMode ? data : THREE.LoaderUtils.decodeText(data);
+                var textData = (this.serverMode ? new Buffer(data).toString() : THREE.LoaderUtils.decodeText(data));
 
                 // parse header (always ascii format)
-
                 var PCDheader = parseHeader(textData);
 
                 // parse data
@@ -146,16 +176,124 @@ export default class SsePCDLoader {
                         item.z = pt.z;
                         position.push(pt.z);
 
-
-                        const classIndex = parseInt(line[offset.label]) || 0;
-                        item.classIndex = classIndex;
-                        label.push(classIndex);
+                        if (offset.label !== undefined) {
+                            const classIndex = parseInt(line[offset.label]) || 0;
+                            item.classIndex = classIndex;
+                            label.push(classIndex);
+                        } else {
+                            item.classIndex = 0;
+                            label.push(0);
+                        }
 
                         // Initialize colors
                         color.push(0);
                         color.push(0);
                         color.push(0);
+                    }
+                }
 
+                // binary-compressed
+                // normally data in PCD files are organized as array of structures: XYZRGBXYZRGB
+                // binary compressed PCD files organize their data as structure of arrays: XXYYZZRGBRGB
+                // that requires a totally different parsing approach compared to non-compressed data
+                if ( PCDheader.data === 'binary_compressed' ) {
+                    var dataview = new DataView( data );
+                    var compressedSize = dataview.getUint32( PCDheader.headerLen, true );
+                    var decompressedSize = dataview.getUint32( PCDheader.headerLen + 4, true );
+                    var decompressed = decompressLZF( new Uint8Array( data, PCDheader.headerLen + 8, compressedSize ), decompressedSize );
+                    dataview = new DataView( decompressed.buffer );
+
+                    var offset = PCDheader.offset;
+                    let pt, item;
+
+                    let camPosition = new THREE.Vector3(parseFloat(PCDheader.viewpoint.tx), parseFloat(PCDheader.viewpoint.ty),
+                        parseFloat(PCDheader.viewpoint.tz));
+                    let camQuaternion = new THREE.Quaternion(PCDheader.viewpoint.qx,
+                        PCDheader.viewpoint.qy, PCDheader.viewpoint.qz, PCDheader.viewpoint.qw);
+
+                    for ( var i = 0; i < PCDheader.points; i ++ ) {
+                        item = {};
+                        payload.push(item);
+
+                        const x = dataview.getFloat32( ( PCDheader.points * offset.x ) + PCDheader.size[ 0 ] * i, true );
+                        const y = dataview.getFloat32( ( PCDheader.points * offset.y ) + PCDheader.size[ 1 ] * i, true );
+                        const z = dataview.getFloat32( ( PCDheader.points * offset.z ) + PCDheader.size[ 2 ] * i, true );
+
+                        pt = new THREE.Vector3(x, y, z);
+
+                        pt = pt.sub(camPosition);
+                        pt.applyQuaternion(camQuaternion);
+
+                        item.x = pt.x;
+                        position.push(pt.x);
+
+                        item.y = pt.y;
+                        position.push(pt.y);
+                        item.z = pt.z;
+                        position.push(pt.z);
+
+                        if ( offset.label !== undefined ) {
+                            const classIndex = dataview.getUint8( PCDheader.points * offset.label + PCDheader.size[ 3 ] * i );
+                            item.classIndex = classIndex;
+                            label.push( classIndex );
+                        } else {
+                            item.classIndex = 0;
+                            label.push(0);
+                        }
+
+                        // Initialize colors
+                        color.push(0);
+                        color.push(0);
+                        color.push(0);
+                    }
+                }
+
+                // binary
+
+                if ( PCDheader.data === 'binary' ) {
+                    var dataview = new DataView( data, PCDheader.headerLen );
+                    var offset = PCDheader.offset;
+                    let pt, item;
+
+                    let camPosition = new THREE.Vector3(parseFloat(PCDheader.viewpoint.tx), parseFloat(PCDheader.viewpoint.ty),
+                        parseFloat(PCDheader.viewpoint.tz));
+                    let camQuaternion = new THREE.Quaternion(PCDheader.viewpoint.qx,
+                        PCDheader.viewpoint.qy, PCDheader.viewpoint.qz, PCDheader.viewpoint.qw);
+
+                    for ( var i = 0, row = 0; i < PCDheader.points; i ++, row += PCDheader.rowSize ) {
+                        item = {};
+                        payload.push(item);
+
+                        const x = dataview.getFloat32( row + offset.x, true );
+                        const y = dataview.getFloat32( row + offset.y, true );
+                        const z = dataview.getFloat32( row + offset.z, true );
+
+                        pt = new THREE.Vector3(x, y, z);
+
+                        pt = pt.sub(camPosition);
+                        pt.applyQuaternion(camQuaternion);
+
+                        item.x = pt.x;
+                        position.push(pt.x);
+
+                        item.y = pt.y;
+                        position.push(pt.y);
+                        item.z = pt.z;
+                        position.push(pt.z);
+
+                        if ( offset.label !== undefined ) {
+                            const classIndex = dataview.getUint8( row + offset.label );
+                            item.classIndex = classIndex;
+                            label.push(classIndex);
+                        } else {
+                            item.classIndex = 0;
+                            label.push(0);
+                        }
+
+                        // Initialize colors
+                        color.push(0);
+                        color.push(0);
+                        color.push(0);
                     }
                 }
 
