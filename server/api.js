@@ -59,7 +59,7 @@ function generatePCDOutput(req, res, next) {
         }
 
         const loader = new THREE.PCDLoader(true);
-        const pcdContent = loader.parse(content.toString(), "");
+        const pcdContent = loader.parse(content.buffer, "");
 
         const head = pcdContent.header;
         const count = parseInt(pcdContent.position.length / 3);

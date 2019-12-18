@@ -128,10 +128,11 @@ export default class SsePCDLoader {
                             sizeSum += PCDheader.size[i];
                         }
                     }
+                    PCDheader.rowSize = sizeSum;
                     return PCDheader;
                 }
 
-                var textData = this.serverMode ? data : THREE.LoaderUtils.decodeText(data);
+                var textData = this.serverMode ? (new Buffer(data)).toString() : THREE.LoaderUtils.decodeText(data);
 
                 // parse header (always ascii format)
                 var PCDheader = parseHeader(textData);
@@ -197,11 +198,11 @@ export default class SsePCDLoader {
                 // binary compressed PCD files organize their data as structure of arrays: XXYYZZRGBRGB
                 // that requires a totally different parsing approach compared to non-compressed data
                 if ( PCDheader.data === 'binary_compressed' ) {
-                    var sizes = new Uint32Array( data.slice( PCDheader.headerLen, PCDheader.headerLen + 8 ) );
-                    var compressedSize = sizes[ 0 ];
-                    var decompressedSize = sizes[ 1 ];
+                    var dataview = new DataView( data.slice( PCDheader.headerLen, PCDheader.headerLen + 8 ) );
+                    var compressedSize = dataview.getUint32( 0, true );
+                    var decompressedSize = dataview.getUint32( 4, true );
                     var decompressed = decompressLZF( new Uint8Array( data, PCDheader.headerLen + 8, compressedSize ), decompressedSize );
-                    var dataview = new DataView( decompressed.buffer );
+                    dataview = new DataView( decompressed.buffer );
 
                     var offset = PCDheader.offset;
                     let pt, item;
