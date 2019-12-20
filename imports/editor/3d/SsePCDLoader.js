@@ -166,8 +166,10 @@ export default class SsePCDLoader {
 
                         pt = new THREE.Vector3(parseFloat(line[offset.x]), parseFloat(line[offset.y]), parseFloat(line[offset.z]));
 
-                        pt = pt.sub(camPosition);
-                        pt.applyQuaternion(camQuaternion);
+                        if (!this.serverMode) {
+                            pt = pt.sub(camPosition);
+                            pt.applyQuaternion(camQuaternion);
+                        }
 
                         item.x = pt.x;
                         position.push(pt.x);
@@ -222,8 +224,10 @@ export default class SsePCDLoader {
 
                         pt = new THREE.Vector3(x, y, z);
 
-                        pt = pt.sub(camPosition);
-                        pt.applyQuaternion(camQuaternion);
+                        if (!this.serverMode) {
+                            pt = pt.sub(camPosition);
+                            pt.applyQuaternion(camQuaternion);
+                        }
 
                         item.x = pt.x;
                         position.push(pt.x);
@@ -271,9 +275,11 @@ export default class SsePCDLoader {
 
                         pt = new THREE.Vector3(x, y, z);
 
-                        pt = pt.sub(camPosition);
-                        pt.applyQuaternion(camQuaternion);
-
+                        if (!this.serverMode) {
+                            pt = pt.sub(camPosition);
+                            pt.applyQuaternion(camQuaternion);
+                        }
+                        
                         item.x = pt.x;
                         position.push(pt.x);
 
