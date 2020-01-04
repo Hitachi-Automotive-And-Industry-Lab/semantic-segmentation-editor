@@ -6,9 +6,11 @@ It supports images (.jpg or .png) and point clouds (.pcd).
 It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactjs.org),
 [Paper.js](http://paperjs.org/) and [three.js](https://threejs.org/).
 
-**New in version 1.2.0:** Support for binary and binary compressed point clouds (thanks @CecilHarvey)
-
-**Breaking change in version 1.2.2:** Exported point cloud coordinates are no longer translated (thanks @hetzge)
+**Latest changes**
+ - **Version 1.3:** Improve pointcloud labeling: bug fixes and performance improvement (labeling a 1M pointcloud is now possible)
+ - **Version 1.2.2:** Breaking change: exported point cloud coordinates are no longer translated (thanks @hetzge)
+ - **Version 1.2.0:** Support for binary and binary compressed point clouds (thanks @CecilHarvey)
+ 
 
 ## Bitmap Image Editor
 

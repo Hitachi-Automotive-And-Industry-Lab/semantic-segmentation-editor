@@ -45,12 +45,11 @@ export default class SseEditor3d extends React.Component {
         this.colorCache = new Map();
         this.pointSizeWithAttenuation = .03;
         this.pointSizeWithoutAttenuation = 2;
-        this.nothingToAnimate = false;
         this.objects = new Set();
         this.selectedObject = undefined;
         this.activeClassIndex = 0;
         this.pixelProjection = new Map();
-        this.highlightedIndex = -1;
+        this.highlightedIndex = undefined;
         this.dataManager = new SseDataManager();
 
         this.tweenDuration = 500;
@@ -81,24 +80,13 @@ export default class SseEditor3d extends React.Component {
 
         const endCameraTween = () => {
             this.cameraState.moving = false;
-            this.invalidateAnimation();
         };
 
         this.cameraTween = new TWEEN.Tween(this.cameraState).onStop(endCameraTween).onComplete(endCameraTween);
 
-        this.visibilityState = {
-            moving: false,
-            position: 0
-        };
 
-        this.visibilityTween = new TWEEN.Tween(this.visibilityState)
-            .onComplete(e => {
-                this.visibilityState.moving = false;
-                this.hiddenIndices.forEach(idx => {
-                    this.positionArray[idx * 3 + 1] = 100000;
-                });
-                this.invalidatePosition();
-            });
+
+
         /*
                 const imports = [
                     "/lib/js/examples/js/Octree.js",
@@ -134,7 +122,8 @@ export default class SseEditor3d extends React.Component {
         return (<div className="absoluteTopLeftZeroW100H100">
                 <canvas id="canvas3d" className="absoluteTopLeftZeroW100H100">
                 </canvas>
-                <canvas id="canvas2d" className="absoluteTopLeftZeroW100H100"></canvas>
+                <canvas id="canvasSelection" className="absoluteTopLeftZeroW100H100"></canvas>
+                <canvas id="canvasMouse" className="absoluteTopLeftZeroW100H100"></canvas>
             </div>
         );
     }
@@ -213,22 +202,9 @@ export default class SseEditor3d extends React.Component {
             }
         });
         this.invalidateColor();
-        this.startVisibilityTween();
         this.updateGlobalBox();
 
     }
-
-    startVisibilityTween() {
-        if (this.visibilityState.moving)
-            return;
-        const visibilityDest = {position: 100};
-        this.visibilityState.moving = true;
-        this.visibilityState.position = 0;
-        this.visibilityTween.to(visibilityDest, this.tweenDuration)
-            .easing(TWEEN.Easing.Quadratic.Out).start();
-        this.invalidateAnimation();
-    }
-
 
     setColor(idx, color = {red: 1, green: 0, blue: 0}) {
         const colors = this.colorArray;
@@ -371,6 +347,7 @@ export default class SseEditor3d extends React.Component {
     }
 
     componentDidMount() {
+        SseMsg.register(this);
         this.init();
         const changePointSize = (amount) => {
             const withAttenuation = {min: 0.01, max: .5, increment: 0.01};
@@ -383,7 +360,6 @@ export default class SseEditor3d extends React.Component {
             } else {
                 this.pointSizeWithoutAttenuation = this.cloudObject.material.size;
             }
-            this.invalidateAnimation();
         };
 
         this.onMsg("point-size", (arg) => changePointSize(arg.value));
@@ -397,7 +373,6 @@ export default class SseEditor3d extends React.Component {
                 this.cloudObject.material.size = this.pointSizeWithoutAttenuation;
             }
             this.cloudObject.material.needsUpdate = true;
-            this.invalidateAnimation();
         });
 
         this.onMsg("solo", objDesc => {
@@ -466,12 +441,11 @@ export default class SseEditor3d extends React.Component {
 
         this.onMsg("globalbox", ({value}) => {
             this.globalBoxMode = this.globalBoxObject.visible = value;
-            this.invalidateAnimation();
         });
 
         this.onMsg("selectionOutline", ({value}) => {
             this.selectionOutlineMode = !this.selectionOutlineMode;
-            this.invalidate2dOverlay()
+            this.invalidateCanvasSelection()
         });
 
 
@@ -522,6 +496,10 @@ export default class SseEditor3d extends React.Component {
 
     componentWillUnmount(){
         SseMsg.unregister(this);
+        this.canvasContainer.removeEventListener("mousedown", this.mouseDown.bind(this), false);
+        this.canvasContainer.removeEventListener("mousemove", this.mouseMove.bind(this), false);
+        this.canvasContainer.removeEventListener("mouseup", this.mouseUp.bind(this), false);
+        this.canvasContainer.removeEventListener("wheel", this.mouseWheel.bind(this), false);
     }
 
     downloadFile() {
@@ -533,7 +511,6 @@ export default class SseEditor3d extends React.Component {
     }
 
     init() {
-        this.sendMsg("bottom-right-label", {message: "Downloading PCD File..."});
         /*
         THREE.Vector3.prototype.toString = function () {
             const s = (n) => Math.round(n * 100) / 100;
@@ -542,8 +519,10 @@ export default class SseEditor3d extends React.Component {
         };
         */
         this.canvas3d = $("#canvas3d").get(0);
-        this.canvas2d = $("#canvas2d").get(0);
-        this.context2d = this.canvas2d.getContext("2d");
+        this.canvasSelection = $("#canvasSelection").get(0);
+        this.contextSelection = this.canvasSelection.getContext("2d");
+        this.canvasMouse = $("#canvasMouse").get(0);
+        this.contextMouse = this.canvasMouse.getContext("2d");
         this.canvasContainer = $('#canvasContainer').get(0);
         this.selection = new Set();
         this.hiddenIndices = new Set();
@@ -583,20 +562,12 @@ export default class SseEditor3d extends React.Component {
 
         this.camera.up.set(0, -1, 0);
 
-        this.setupRaycaster();
-
         this.orbiter = new THREE.OrbitControls(this, this.camera, this.canvasContainer, this);
-        this.orbiter.activate();
         this.orbiter.addEventListener("start", this.orbiterStart.bind(this), false);
         this.orbiter.addEventListener("change", this.orbiterChange.bind(this), false);
         this.orbiter.addEventListener("end", this.orbiterEnd.bind(this), false);
 
         this.frustum = new THREE.Frustum();
-
-        this.setupTools();
-        this.setupLight();
-        this.animate();
-        setTimeout(this.resizeCanvas.bind(this), 100); // Global layout can take some time...
     }
 
     grayIndex(idx) {
@@ -617,7 +588,7 @@ export default class SseEditor3d extends React.Component {
     hideIndex(idx) {
         this.hiddenIndices.add(idx);
         this.visibleIndices.delete(idx);
-        this.startVisibilityTween();
+        this.setPosition(idx, 10E20, 10E20, 10E20);
         this.invalidateColor();
     }
 
@@ -627,7 +598,6 @@ export default class SseEditor3d extends React.Component {
         const {x, y, z} = this.cloudData[idx];
 
         this.setPosition(idx, x, y, z);
-        this.startVisibilityTween();
         this.invalidateColor();
     }
 
@@ -696,11 +666,12 @@ export default class SseEditor3d extends React.Component {
         if (target)
             this.orbiter.target.copy(target);
 
-        this.invalidateAnimation();
+
     }
     */
 
     moveCamera(eye, target) {
+        this.orbiting = true;
         const orientedRange = (a0, a1) => {
             const da = (a1 - a0) % DOUBLEPI;
             return moduloHalfPI(2 * da % DOUBLEPI - da);
@@ -916,11 +887,14 @@ export default class SseEditor3d extends React.Component {
         if (this.cloudData) {
             let message = this.visibleIndices.size + " points / ";
             const bsize = this.globalBox3.getSize(new THREE.Vector3());
-            message += " Width: " + round2(bsize.x);
-            message += "m / Height: " + round2(bsize.y);
-            message += "m / Depth: " + round2(bsize.z);
+            const w = round2(bsize.x);
+            const h = round2(bsize.y);
+            const d = round2(bsize.z);
+            message += " Width: " + w;
+            message += "m / Height: " + h;
+            message += "m / Depth: " + d;
             message += "m";
-            this.sendMsg("bottom-right-label", {message})
+            this.sendMsg("bottom-right-label", {message});
         }
     }
 
@@ -939,7 +913,6 @@ export default class SseEditor3d extends React.Component {
             });
             this.colorIsDirty = false;
             this.cloudObject.geometry.attributes.color.needsUpdate = true;
-            this.invalidateAnimation();
         }
     }
 
@@ -949,6 +922,7 @@ export default class SseEditor3d extends React.Component {
 
     clearSelection() {
         this.selection.clear();
+        this.clearCanvasSelection();
         this.invalidateColor();
         this.notifySelectionChange();
     }
@@ -956,7 +930,6 @@ export default class SseEditor3d extends React.Component {
     addIndexToSelection(idx) {
         this.selection.add(idx);
         this.invalidateColor();
-
     }
 
     removeIndexFromSelection(idx) {
@@ -979,22 +952,26 @@ export default class SseEditor3d extends React.Component {
         }
     }
 
-    drawPolyLine(pts, color, xField = 0, yField = 1, close) {
+    drawPolyLine(context, pts, color, xField = 0, yField = 1, close) {
         if (!pts || !pts.length) return;
-        this.context2d.beginPath();
-        this.context2d.lineWidth = 1;
-        this.context2d.strokeStyle = color;
-        this.context2d.moveTo(pts[0][xField], pts[0][yField]);
+        context.beginPath();
+        context.lineWidth = 1;
+        context.strokeStyle = color;
+        context.moveTo(pts[0][xField], pts[0][yField]);
         for (let i = 1; i < pts.length; i++) {
-            this.context2d.lineTo(pts[i][xField], pts[i][yField]);
+            context.lineTo(pts[i][xField], pts[i][yField]);
         }
         if (close)
-            this.context2d.lineTo(pts[0][xField], pts[0][yField]);
-        this.context2d.stroke();
+            context.lineTo(pts[0][xField], pts[0][yField]);
+        context.stroke();
     }
 
-    clearCanvas2d() {
-        this.context2d.clearRect(0, 0, this.viewWidth, this.viewHeight);
+    clearCanvasSelection() {
+        this.contextSelection.clearRect(0, 0, this.viewWidth, this.viewHeight);
+    }
+
+    clearCanvasMouse() {
+        this.contextMouse.clearRect(0, 0, this.viewWidth, this.viewHeight);
     }
 
     originalCoordinates(idx) {
@@ -1047,6 +1024,7 @@ export default class SseEditor3d extends React.Component {
             this.cloudData.forEach((pt, idx) => {
                 toScreen(pt, idx);
             });
+        this.pixelProjectionRequestTime = undefined;
     }
 
     resizeCanvas() {
@@ -1065,18 +1043,21 @@ export default class SseEditor3d extends React.Component {
         this.camera.aspect = this.viewWidth / this.viewHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.viewWidth, this.viewHeight);
-        this.canvas2d.width = this.viewWidth;
-        this.canvas2d.height = this.viewHeight;
+        this.canvasSelection.width = this.viewWidth;
+        this.canvasSelection.height = this.viewHeight;
+        this.canvasMouse.width = this.viewWidth;
+        this.canvasMouse.height = this.viewHeight;
 
         if (this.orbiter && this.orbiter.handleResize)
             this.orbiter.handleResize();
-        this.invalidateAnimation();
     }
 
     highlightIndex(idx) {
-        this.highlightedIndex = idx;
-        this.setHighlightFeedback();
-        this.invalidate2dOverlay();
+        if (this.highlightedIndex != idx) {
+            this.highlightedIndex = idx;
+            this.setHighlightFeedback();
+            this.invalidateCanvasMouse();
+        }
     }
 
     _orientationRaycasting() {
@@ -1104,59 +1085,63 @@ export default class SseEditor3d extends React.Component {
     }
 
     _raycasting() {
+        if (! this.cloudObject || !this.raycastingIsDirty)
+            return;
         this.raycaster.setFromCamera(this.mouse, this.camera);
-
-        const intersects = this.raycaster.intersectObjects(this.scene.children).filter(x => x.object.type === "Points");
+        const intersects = this.raycaster.intersectObjects([this.cloudObject]);
         if (intersects.length) {
             intersects.sort((a, b) => a.distanceToRay < b.distanceToRay ? -1 : 1);
             const closer = intersects[0];
-            this.mouseTargetIndex = closer.index;
-            if (closer.object.type === "Points" && closer.distanceToRay < 1) {
-                this.highlightIndex(closer.index);
-                SseGlobals.setCursor("pointer");
-            } else {
-                this.mouseTargetIndex = undefined;
-                this.highlightIndex(undefined);
-            }
+            if (this.mouseTargetIndex != closer.index) {
+                this.mouseTargetIndex = closer.index;
 
+                this.highlightIndex(this.mouseTargetIndex);
+                SseGlobals.setCursor("pointer");
+            }
         } else {
             this.mouseTargetIndex = undefined;
             if (!this.mouse.down) {
                 SseGlobals.setCursor("crosshair");
             }
             this.highlightIndex(undefined);
+            this.raycastingIsDirty = false;
         }
     }
 
-    invalidateAnimation() {
-        this.nothingToAnimate = false;
+    invalidateRaycasting() {
+        this.raycastingIsDirty = true;
     }
 
     invalidatePosition() {
         this.cloudObject.geometry.attributes.position.needsUpdate = true;
-        this.invalidateAnimation();
     }
 
     invalidateColor() {
         this.colorIsDirty = true;
-        this.invalidateAnimation();
     }
 
-    invalidate2dOverlay() {
-        this.overlayIsDirty = true;
+    invalidateCanvasSelection() {
+        this.canvasSelectionIsDirty = true;
     }
 
-    drawCanvas2d() {
-        if (!this.overlayIsDirty)
+    invalidateCanvasMouse() {
+        this.canvasMouseIsDirty = true;
+    }
+
+    invalidatePixelProjection() {
+        //this.pixelProjectionRequestTime = true;
+    }
+
+    drawCanvasMouse() {
+        if (!this.canvasMouseIsDirty)
             return;
-        this.overlayIsDirty = false;
-        this.updatePixelProjection();
-        this.clearCanvas2d();
-        const ctx = this.context2d;
 
+        this.clearCanvasMouse();
+        const ctx = this.contextMouse;
         // Lasso line
         if (this.currentTool.polygon && this.currentTool.polygon.length) {
-            this.drawPolyLine(this.currentTool.polygon, "yellow");
+            this.drawPolyLine(ctx, this.currentTool.polygon, "yellow");
+            return;
         }
 
         // Hovered point
@@ -1172,6 +1157,15 @@ export default class SseEditor3d extends React.Component {
                 ctx.stroke();
             }
         }
+
+        this.canvasMouseIsDirty = false;
+    }
+
+    drawCanvasSelection() {
+        if (!this.canvasSelectionIsDirty)
+            return;
+        this.canvasSelectionIsDirty = false;
+        this.clearCanvasSelection();
 
         // Selection outline
         if (!this.cameraState.moving && !this.orbiting && this.selectionOutlineMode && this.selection.size > 0) {
@@ -1222,40 +1216,49 @@ export default class SseEditor3d extends React.Component {
                 const comb = PolyBool.combine(segments, seg2);
                 segments = PolyBool.selectUnion(comb);
             }
-            this.drawPolyLine(PolyBool.polygon(segments).regions[0], "yellow", 0, 1, true);
+            this.drawPolyLine(this.contextSelection, PolyBool.polygon(segments).regions[0], "yellow", 0, 1, true);
         }
     }
 
     animate(time) {
-        requestAnimationFrame(this.animate.bind(this));
-        this.drawCanvas2d();
-        if (this.nothingToAnimate &&
-            this.visibilityState.moving === false &&
-            this.cameraState.moving === false)
-            return;
-        this.nothingToAnimate = true;
+        if (this.sendMsg)
+            requestAnimationFrame(this.animate.bind(this));
+        else return;
+        const postponingInterval = 300;
+        const justZoom = time - this.lastWheelTime < postponingInterval;
+        this.lastTime = time;
+
         this.updateCamera(time);
+        if (this.orbiting || justZoom){
 
-        if (this.visibilityState.moving) {
-            this.visibilityTween.update(time);
-            if (this.hiddenIndices.size > 0) {
-
-                this.hiddenIndices.forEach(idx => {
-                    const pos = this.visibilityState.position;
-                    this.positionArray[idx * 3 + 1] -= (pos / 10);
-                });
-
+            this.clearCanvasSelection();
+            this.clearCanvasMouse();
+            this.renderer.render(this.scene, this.camera);
+            if (this.mouse.dragged == 0)
+                this.orbiting = false;
+            this.pixelProjectionRequestTime = time;
+        }else {
+            if (this.pixelProjectionRequestTime) {
+                if (time - this.pixelProjectionRequestTime > postponingInterval) {
+                    this.updatePixelProjection();
+                    this.invalidateCanvasSelection();
+                    this.invalidateCanvasMouse();
+                }
+            } else {
+                this.drawCanvasSelection();
+                this.drawCanvasMouse();
+                if (this.orientationArrows.size > 0)
+                    this._orientationRaycasting();
+                else {
+                    this._raycasting();
+                }
             }
-            this.invalidatePosition();
-        }
 
-        if (this.orientationArrows.size > 0)
-            this._orientationRaycasting();
-        else
-            this._raycasting();
-        this.renderer.render(this.scene, this.camera);
-        if (this.colorIsDirty) {
-            this.paintScene();
+            if (this.colorIsDirty) {
+                this.paintScene();
+            }
+
+            this.renderer.render(this.scene, this.camera);
         }
     }
 
@@ -1271,6 +1274,7 @@ export default class SseEditor3d extends React.Component {
     resetRotation() {
         const {rotationX, rotationY, rotationZ} = this.meta;
         this.cloudGeometry.rotateZ(-rotationZ || 0).rotateY(-rotationY || 0).rotateX(-rotationX || 0);
+        this.display(undefined, this.positionArray, this.labelArray);
         this.meta.rotationX = this.meta.rotationY = this.meta.rotationZ = 0;
         this.updateGlobalBox();
         this.invalidatePosition();
@@ -1382,7 +1386,7 @@ export default class SseEditor3d extends React.Component {
         this.meta.rotationX = rx;
         this.meta.rotationY = ry;
         this.meta.rotationZ = rz;
-        this.meta.rotationDescription = config;
+
         this.rotateGeometry(rx, ry, rz);
 
         let obj, idx = 0;
@@ -1492,8 +1496,6 @@ export default class SseEditor3d extends React.Component {
         drawArrow(bbox, "down");
         // Look up
         drawArrow(bbox, "up");
-        this.invalidateAnimation();
-
     }
 
     stopPointcloudOrientation() {
@@ -1501,13 +1503,13 @@ export default class SseEditor3d extends React.Component {
         this.orientationArrows.clear();
         this.pendingUpVector = this.pendingOrientationArrow = undefined;
         this.sendMsg("orientation-close");
-        this.invalidateAnimation();
     }
 
-    setupRaycaster() {
+    setupRaycaster(boundingBox, numberOfPoints) {
         this.raycaster = new THREE.Raycaster();
-        this.raycaster.linePrecision = .5;
-        this.raycaster.params.Points.threshold = 1;
+        const threshold = Math.cbrt(boundingBox.x * boundingBox.y * boundingBox.z / numberOfPoints) / 3;
+        this.raycaster.params.Points.threshold = threshold;
+        this.raycaster.linePrecision = .1;
     }
 
     setupAxes() {
@@ -1546,12 +1548,13 @@ export default class SseEditor3d extends React.Component {
         this.globalBoxObject = gbb[0];
         this.globalBox3 = gbb[1];
         this.globalBoxObject.visible = this.globalBoxMode;
+        const bsize = this.globalBox3.getSize(new THREE.Vector3());
+        this.setupRaycaster(bsize, this.cloudData.length);
     }
 
     updateGlobalBox() {
         this.destroyGlobalBox();
         this.drawGlobalBox();
-        this.invalidateAnimation();
     }
 
     drawBBox(forEachableIndices) {
@@ -1571,7 +1574,7 @@ export default class SseEditor3d extends React.Component {
 
             geom = new THREE.BufferGeometry();
             const vertices = new Float32Array(flat);
-            geom.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
             geom.computeBoundingBox();
         } else {
             geom = this.cloudGeometry;
@@ -1646,7 +1649,7 @@ export default class SseEditor3d extends React.Component {
         this.canvasContainer.addEventListener("mousedown", this.mouseDown.bind(this), false);
         this.canvasContainer.addEventListener("mousemove", this.mouseMove.bind(this), false);
         this.canvasContainer.addEventListener("mouseup", this.mouseUp.bind(this), false);
-        this.canvasContainer.addEventListener("wheel", () => this.invalidateAnimation(), false);
+        this.canvasContainer.addEventListener("wheel", this.mouseWheel.bind(this), false);
         $("body").on('keydown', this.keyDown.bind(this));
         $("body").on('keyup', this.keyUp.bind(this));
         this.activateTool(this.selector);
@@ -1654,16 +1657,18 @@ export default class SseEditor3d extends React.Component {
 
     orbiterStart() {
         this.orbiting = true;
-        this.invalidate2dOverlay();
+        this.invalidateCanvasSelection();
     }
 
+
     orbiterChange() {
-        this.invalidate2dOverlay();
+        this.orbiting = true;
+        this.invalidateCanvasSelection();
     }
 
     orbiterEnd() {
-        this.orbiting = false;
-        this.invalidate2dOverlay()
+        this.pixelProjectionRequestTime = this.lastTime;
+        this.invalidateCanvasSelection();
     }
 
     assignNewClass(pointIndex, classIndex) {
@@ -1709,6 +1714,11 @@ export default class SseEditor3d extends React.Component {
         this.ctrlDown = false;
     }
 
+    mouseWheel(ev) {
+        this.lastWheelTime = this.lastTime;
+        this.invalidatePixelProjection();
+    }
+
     mouseDown(ev) {
         if (ev.button == 1 || this.ctrlDown) {
             this.changeTarget(ev);
@@ -1720,7 +1730,6 @@ export default class SseEditor3d extends React.Component {
             this.cameraPresetInfo = undefined;
             if (this.currentTool.mouseDown)
                 this.currentTool.mouseDown.bind(this.currentTool)(ev);
-            this.invalidateAnimation();
             this.sendMsg("mouse-down", ev);
         }
     }
@@ -1786,8 +1795,9 @@ export default class SseEditor3d extends React.Component {
             }
         }
         this.mouse.dragged = 0;
-        this.invalidate2dOverlay();
+        this.invalidateCanvasSelection();
         this.sendMsg("mouse-up", ev);
+        this.invalidatePixelProjection();
     }
 
     mouseMove(iev) {
@@ -1808,8 +1818,7 @@ export default class SseEditor3d extends React.Component {
 
         if (this.mouse.down)
             this.mouseDrag(ev);
-        this.invalidate2dOverlay();
-        this.invalidateAnimation();
+        this.invalidateRaycasting();
         this.sendMsg("mouse-move", ev);
     }
 
@@ -1880,82 +1889,87 @@ export default class SseEditor3d extends React.Component {
     }
 
     display(objectArray, positionArray, labelArray) {
-        this.scene.remove(this.cloudObject);
-        const geometry = this.geometry = new THREE.BufferGeometry();
-        this.cloudData = [];
-        let obj;
+        return new Promise( (res, rej)=> {
+            this.scene.remove(this.cloudObject);
+            const geometry = this.geometry = new THREE.BufferGeometry();
+            this.cloudData = [];
+            let obj;
 
-        this.objects = new Set(objectArray);
-        this.buildPointToObjectMap();
-        this.labelArray = labelArray;
+            this.objects = new Set(objectArray);
+            this.buildPointToObjectMap();
+            this.labelArray = labelArray;
 
-        positionArray.forEach((v, i) => {
-            switch (i % 3) {
-                case 0:
-                    obj = {x: v};
-                    break;
-                case 1:
-                    obj.y = v;
-                    break;
-                case 2:
-                    obj.z = v;
-                    this.cloudData.push(obj);
-                    break;
-            }
-        });
-        const colorArray = [];
-        if (labelArray) {
-            labelArray.forEach((v, i) => {
-                this.cloudData[i].classIndex = v;
-                const rgb = this.activeSoc.colorForIndexAsRGBArray(v);
-                colorArray.push(rgb[0], rgb[1], rgb[2]);
+            positionArray.forEach((v, i) => {
+                switch (i % 3) {
+                    case 0:
+                        obj = {x: v};
+                        break;
+                    case 1:
+                        obj.y = v;
+                        break;
+                    case 2:
+                        obj.z = v;
+                        this.cloudData.push(obj);
+                        break;
+                }
             });
-        }
+            const colorArray = [];
+            if (labelArray) {
+                labelArray.forEach((v, i) => {
+                    this.cloudData[i].classIndex = v;
+                    const rgb = this.activeSoc.colorForIndexAsRGBArray(v);
+                    colorArray.push(rgb[0], rgb[1], rgb[2]);
+                });
+            }
 
-        geometry.addAttribute('position', new THREE.Float32BufferAttribute(positionArray, 3));
-        geometry.addAttribute('color', new THREE.Float32BufferAttribute(colorArray, 3));
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionArray, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colorArray, 3));
 
-        geometry.computeBoundingSphere();
+            geometry.computeBoundingSphere();
 
-        const material = new THREE.PointsMaterial({size: 2, vertexColors: THREE.VertexColors});
-        material.sizeAttenuation = false;
+            const material = new THREE.PointsMaterial({size: 2, vertexColors: THREE.VertexColors});
+            material.sizeAttenuation = false;
 
-        // build mesh
-        this.cloudObject = new THREE.Points(geometry, material);
+            // build mesh
+            this.cloudObject = new THREE.Points(geometry, material);
 
-        this.visibleIndices = new Set([...Array(this.cloudData.length).keys()]);
+            this.visibleIndices = new Set([...Array(this.cloudData.length).keys()]);
 
-        this.cloudData.byClassIndex = {};
+            this.cloudData.byClassIndex = {};
 
-        this.cloudData.reduce((acc, cur) => {
-            if (acc[cur.classIndex])
-                acc[cur.classIndex].add(cur);
-            else
-                acc[cur.classIndex] = new Set([cur]);
-            return acc;
-        }, this.cloudData.byClassIndex);
+            this.cloudData.reduce((acc, cur) => {
+                if (acc[cur.classIndex])
+                    acc[cur.classIndex].add(cur);
+                else
+                    acc[cur.classIndex] = new Set([cur]);
+                return acc;
+            }, this.cloudData.byClassIndex);
 
-        this.cloudGeometry = geometry;
-        this.camera.up.set(0, -1, 0);
+            this.cloudGeometry = geometry;
+            this.camera.up.set(0, -1, 0);
 
-        this.scene.add(this.cloudObject);
+            this.scene.add(this.cloudObject);
 
-        this.invalidateCounters();
-        this.invalidateObjects();
-        this.invalidateColor();
-        this.invalidatePosition();
-        this.invalidateAnimation();
+            this.invalidateCounters();
+            this.invalidateObjects();
+            this.invalidateColor();
+            this.invalidatePosition();
+            this.invalidatePixelProjection();
 
-        this.updateClassFilter(-1);
+            this.updateClassFilter(-1);
 
-        this.cameraPreset("front", true);
+            this.cameraPreset("front", true);
+            res();
+        });
     }
 
     loadPCDFile(fileUrl) {
+        setTimeout(()=>
+        this.sendMsg("bottom-right-label", {message: "Loading PCD data..."}), 1);
         const loader = new THREE.PCDLoader();
         return new Promise((res) => {
             loader.load(fileUrl, (arg) => {
-                $("#waiting").addClass("display-none");
+
                 this.display(arg.object, arg.position, arg.label);
                 Object.assign(this.meta, {header: arg.header});
                 res();
@@ -1982,6 +1996,17 @@ export default class SseEditor3d extends React.Component {
         Meteor.call("saveData", this.meta);
     }
 
+    initDone(){
+
+        this.setupTools();
+        this.setupLight();
+        this.animate();
+        this.orbiter.activate();
+        setTimeout(this.resizeCanvas.bind(this), 100); // Global layout can take some time...
+
+        $("#waiting").addClass("display-none");
+    }
+
     start() {
         const serverMeta = SseSamples.findOne({url: this.props.imageUrl});
         this.meta = serverMeta || {url: this.props.imageUrl};
@@ -1997,8 +2022,10 @@ export default class SseEditor3d extends React.Component {
 
         this.loadPCDFile(fileUrl).then(() => {
             this.rotateGeometry(this.meta.rotationX, this.meta.rotationY, this.meta.rotationZ);
+            this.sendMsg("bottom-right-label", {message: "Loading labels..."});
             this.dataManager.loadBinaryFile(this.props.imageUrl + ".labels")
                 .then(result => {
+                    this.sendMsg("bottom-right-label", {message: "Loading objects..."});
                     this.labelArray = result;
                     this.maxClassIndex = 0;
                     for (var i = 0; i < this.labelArray.length; i++) {
@@ -2010,13 +2037,14 @@ export default class SseEditor3d extends React.Component {
                 }, () => {
                     this.saveBinaryLabels();
                 }).then(() => {
-
                 this.dataManager.loadBinaryFile(this.props.imageUrl + ".objects").then(result => {
-                    if (result.forEach)
-                        this.display(result, this.positionArray, this.labelArray);
-                    else
-                        this.display(undefined, this.positionArray, this.labelArray);
+                    if (!result.forEach)
+                        result = undefined;
+                    this.display(result, this.positionArray, this.labelArray).then( ()=>{
+                        this.initDone();
+                    });
                 }, () => {
+                    this.initDone();
                 });
             });
         });

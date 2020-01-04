@@ -54,7 +54,7 @@
     "serve-static": "1.13.2",
     "shelljs": "0.8.2",
     "simplify-js": "1.2.3",
-    "three": "0.93.0",
+    "three": "0.112.1",
     "tippy.js": "2.5.2",
     "underscore": "1.9.1",
     "url": "0.11.0"
