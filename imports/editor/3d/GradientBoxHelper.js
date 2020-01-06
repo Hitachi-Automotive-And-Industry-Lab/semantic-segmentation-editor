@@ -16,7 +16,7 @@ function BoxHelper(object, color) {
 
     var geometry = new BufferGeometry();
     geometry.setIndex(new BufferAttribute(indices, 1));
-    geometry.addAttribute('position', new BufferAttribute(positions, 3));
+    geometry.setAttribute('position', new BufferAttribute(positions, 3));
 
     var colors = [
         .2, .2, .2, .2, .2, .2,
@@ -28,7 +28,7 @@ function BoxHelper(object, color) {
         .8, .8, .8, .8, .8, .8,
         .8, .8, .8, .8, .8, .8
     ];
-    geometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.LineBasicMaterial({vertexColors: 2});
 

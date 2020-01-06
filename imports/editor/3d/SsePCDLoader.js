@@ -309,12 +309,12 @@ export default class SsePCDLoader {
                 var geometry = new THREE.BufferGeometry();
 
                 if (position.length > 0)
-                    geometry.addAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+                    geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
                 if (label.length > 0)
-                    geometry.addAttribute('label', new THREE.Uint8BufferAttribute(label, 3));
+                    geometry.setAttribute('label', new THREE.Uint8BufferAttribute(label, 3));
                 if (color.length > 0) {
                     const colorAtt = new THREE.Float32BufferAttribute(color, 3);
-                    geometry.addAttribute('color', colorAtt);
+                    geometry.setAttribute('color', colorAtt);
                 }
 
                 geometry.computeBoundingSphere();
