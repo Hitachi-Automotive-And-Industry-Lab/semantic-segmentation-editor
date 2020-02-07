@@ -52,6 +52,9 @@ export default class SseEditor3d extends React.Component {
         this.highlightedIndex = undefined;
         this.dataManager = new SseDataManager();
 
+        this.MinIntensity = 0;
+        this.MaxIntensity = 100000;
+        
         this.tweenDuration = 500;
 
         this.cameraState = {
@@ -492,6 +495,10 @@ export default class SseEditor3d extends React.Component {
             this.colorBoost = arg.value;
             this.invalidateColor();
         }));
+
+        // Intensity-Flag
+        this.onMsg("intensity-toggle", () => this.toggleIntensity());
+        this.onMsg("intensity-range", (arg) => this.intensityRange(arg.value));
     }
 
     componentWillUnmount(){
@@ -900,6 +907,28 @@ export default class SseEditor3d extends React.Component {
 
     paintScene() {
         if (this.cloudData) {
+            if(this.DisplayIntensity && this.compression === 'ascii'){
+                this.cloudData.forEach((pt, idx) => {
+                    //TODO
+                    var _v = (this.intensityArray[idx]-this.MinIntensity)/(this.MaxIntensity-this.MinIntensity)
+                    _v = _v < 0 ? 0 : _v
+                    _v = _v > 1 ? 1 : _v
+                    var rgb = this.Map2Color(_v)
+                    this.setColor(idx, {red: rgb[0], green: rgb[1], blue: rgb[2]});
+                });
+                this.colorIsDirty = false;
+                this.cloudObject.geometry.attributes.color.needsUpdate = true;
+            }
+            else if(this.DisplayIntensity && this.compression === 'binary'){
+                this.cloudData.forEach((pt, idx) => {
+                    //TODO
+                    var rgb = this.rgbArray[idx];
+                    this.setColor(idx, {red: rgb[0]/255, green: rgb[1]/255, blue: rgb[2]/255});
+                });
+                this.colorIsDirty = false;
+                this.cloudObject.geometry.attributes.color.needsUpdate = true;
+            }
+            else{
             this.cloudData.forEach((pt, idx) => {
                 if (this.selection.has(idx)) {
                     this.setColor(idx, {red: 1, green: 0});
@@ -913,6 +942,7 @@ export default class SseEditor3d extends React.Component {
             });
             this.colorIsDirty = false;
             this.cloudObject.geometry.attributes.color.needsUpdate = true;
+            }
         }
     }
 
@@ -1267,14 +1297,14 @@ export default class SseEditor3d extends React.Component {
         this.meta.rotationY = ry || 0;
         this.meta.rotationZ = rz || 0;
         this.cloudGeometry.rotateX(this.meta.rotationX).rotateY(this.meta.rotationY).rotateZ(this.meta.rotationZ);
-        this.display(this.objects, this.positionArray, this.labelArray);
+        this.display(this.objects, this.positionArray, this.labelArray, this.intensityArray, this.compression, this.rgbArray);
         this.saveMeta();
     }
 
     resetRotation() {
         const {rotationX, rotationY, rotationZ} = this.meta;
         this.cloudGeometry.rotateZ(-rotationZ || 0).rotateY(-rotationY || 0).rotateX(-rotationX || 0);
-        this.display(undefined, this.positionArray, this.labelArray);
+        this.display(undefined, this.positionArray, this.labelArray, this.intensityArray, this.compression, this.rgbArray);
         this.meta.rotationX = this.meta.rotationY = this.meta.rotationZ = 0;
         this.updateGlobalBox();
         this.invalidatePosition();
@@ -1887,8 +1917,34 @@ export default class SseEditor3d extends React.Component {
     getPixel(o) {
         return this.pixelProjection.get(o);
     }
+    
+    Map2Color(value){ 
+        var r = (1-value)*1.0 + value*1.0
+        var g = (1-value)*0.0 + value*1.0
+        var b = (1-value)*0.0 + value*0.0
+        // console.log(r, g, b);
+        return [r,g,b]
+    }
 
-    display(objectArray, positionArray, labelArray) {
+    toggleIntensity(){
+        // Adapt Our Color
+        this.invalidateColor()
+        if(this.DisplayIntensity){
+            this.DisplayIntensity = false;
+        }else{
+            this.DisplayIntensity = true;
+        }
+    }
+
+    intensityRange(range){
+        this.MinIntensity = range[0]
+        this.MaxIntensity = range[1]
+        if(this.DisplayIntensity){
+            this.invalidateColor()
+        }
+    }
+
+    display(objectArray, positionArray, labelArray, intensityArray, compression, rgbArray) {
         return new Promise( (res, rej)=> {
             this.scene.remove(this.cloudObject);
             const geometry = this.geometry = new THREE.BufferGeometry();
@@ -1898,6 +1954,9 @@ export default class SseEditor3d extends React.Component {
             this.objects = new Set(objectArray);
             this.buildPointToObjectMap();
             this.labelArray = labelArray;
+            this.intensityArray = intensityArray;
+            this.compression = compression;
+            this.rgbArray = rgbArray;
 
             positionArray.forEach((v, i) => {
                 switch (i % 3) {
@@ -1914,12 +1973,36 @@ export default class SseEditor3d extends React.Component {
                 }
             });
             const colorArray = [];
-            if (labelArray) {
-                labelArray.forEach((v, i) => {
-                    this.cloudData[i].classIndex = v;
-                    const rgb = this.activeSoc.colorForIndexAsRGBArray(v);
-                    colorArray.push(rgb[0], rgb[1], rgb[2]);
-                });
+            if (this.DisplayIntensity && this.compression === 'ascii'){ 
+                // Here we can insert our color-scheme
+                if (intensityArray) {
+                    intensityArray.forEach((v, i) => {
+                        //this.cloudData[i].classIndex = v;
+                        var _v = (v - this.MinIntensity)/(this.MaxIntensity-this.MinIntensity)
+                        _v = _v < 0 ? 0 : _v
+                        _v = _v > 1 ? 1 : _v
+                        const rgb = this.Map2Color(_v)
+                        colorArray.push(rgb[0], rgb[1], rgb[2]);
+                    });
+                }
+            }
+            else if(this.DisplayIntensity && this.compression === 'binary'){
+                if (rgbArray) {
+                    rgbArray.forEach((v, i) => {
+                        //this.cloudData[i].classIndex = v;
+                        const rgb = v;
+                        colorArray.push(rgb[0]/255, rgb[1]/255, rgb[2]/255);
+                    });
+                }
+            }
+            else{
+                if (labelArray) {
+                    labelArray.forEach((v, i) => {
+                        this.cloudData[i].classIndex = v;
+                        const rgb = this.activeSoc.colorForIndexAsRGBArray(v);
+                        colorArray.push(rgb[0], rgb[1], rgb[2]);
+                    });
+                }
             }
 
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionArray, 3));
@@ -1970,7 +2053,7 @@ export default class SseEditor3d extends React.Component {
         return new Promise((res) => {
             loader.load(fileUrl, (arg) => {
 
-                this.display(arg.object, arg.position, arg.label);
+                this.display(arg.object, arg.position, arg.label, arg.intensity, arg.header.data, arg.rgb);
                 Object.assign(this.meta, {header: arg.header});
                 res();
             });
@@ -2040,7 +2123,7 @@ export default class SseEditor3d extends React.Component {
                 this.dataManager.loadBinaryFile(this.props.imageUrl + ".objects").then(result => {
                     if (!result.forEach)
                         result = undefined;
-                    this.display(result, this.positionArray, this.labelArray).then( ()=>{
+                    this.display(result, this.positionArray, this.labelArray, this.intensityArray, this.compression, this.rgbArray).then( ()=>{
                         this.initDone();
                     });
                 }, () => {

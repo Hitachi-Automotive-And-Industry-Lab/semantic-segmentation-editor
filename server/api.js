@@ -64,13 +64,13 @@ function generatePCDOutput(req, res, next) {
         const head = pcdContent.header;
         const count = parseInt(pcdContent.position.length / 3);
         let out = "VERSION .7\n";
-        out += "FIELDS x y z label object\n";
-        out += "SIZE 4 4 4 4 4\n";
-        out += "TYPE F F F I I\n";
-        out += "COUNT 1 1 1 1 1\n";
-        out += "WIDTH " + count + "\n";
-        out += "HEIGHT 1\n";
-        out += "POINTS " + count + "\n";
+        out += "FIELDS x y z intensity label object\n";
+        out += "SIZE 4 4 4 4 4 4\n";
+        out += "TYPE F F F F I I\n";
+        out += "COUNT 1 1 1 1 1 1\n";
+        out += "WIDTH " + pcdContent.header.width + "\n";
+        out += "HEIGHT" + pcdContent.header.height + "\n";
+        out += "POINTS " + pcdContent.header.width*pcdContent.header.height + "\n";
         out += "VIEWPOINT " + head.viewpoint.tx;
         out += " " + head.viewpoint.ty;
         out += " " + head.viewpoint.tz;
@@ -110,7 +110,7 @@ function generatePCDOutput(req, res, next) {
 
                     switch (i % 3) {
                         case 0:
-                            obj = {x: v};
+                            obj = {intensity: pcdContent.intensity[position], x: v};
                             break;
                         case 1:
                             obj.y = v;
@@ -118,6 +118,7 @@ function generatePCDOutput(req, res, next) {
                         case 2:
                             obj.z = v;
                             out += obj.x + " " + obj.y + " " + obj.z + " ";
+                            out += obj.intensity + " ";
                             out += labels[position] + " ";
                             const assignedObject = objectByPointIndex.get(position);
                             if (assignedObject != undefined)
