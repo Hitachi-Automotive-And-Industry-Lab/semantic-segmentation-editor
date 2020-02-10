@@ -1,9 +1,9 @@
 import React from 'react';
 
-import Slider, { Range } from 'rc-slider';
+import Slider from 'rc-slider';
 import {
     ArrowCollapseDown, ArrowCollapseLeft, ArrowCollapseRight, ArrowCollapseUp, ArrowExpandDown, Blur, BlurOff,
-    Brightness6, CubeSend, ImageFilterTiltShift, Rotate3D, Target, Video, Lightbulb, LightbulbOff, RayStartEnd
+    Brightness6, CubeSend, ImageFilterTiltShift, Rotate3D, Target, Video, Lightbulb, LightbulbOn
 } from 'mdi-material-ui';
 import SseToolbar from "../../common/SseToolbar";
 
@@ -13,8 +13,7 @@ export default class SseCameraToolbar extends SseToolbar {
         this.state = {
             colorBoostVisible: "none",
             pointSizeVisible: "none",
-            intensityRangeVisible: "none",
-            intensityRange : [1000,10000]
+            showRgbToggle: false
         };
         this.state.data = {
             colorBoost: 0
@@ -34,11 +33,14 @@ export default class SseCameraToolbar extends SseToolbar {
         this.addCommand("orientationCommand", "Pointcloud Orientation", false, "-", "orientation-change", Rotate3D, undefined, " ");
         this.addCommand("colorBoostCommand", "Color Intensity", 1, "-", "color-boost-toggle", Brightness6, undefined, " ");
         this.addCommand("pointSizeCommand", "Point Size", 1, "-", "point-size-toggle", ImageFilterTiltShift, undefined, " ");
-        this.addCommand("distanceAttenuationCommand", "Distance Attenuation", Blur, "", "distance-attenuation", BlurOff, undefined, undefined, BlurOff);
-        this.addCommand("intensityCommand", "Display Intensity", LightbulbOff, "", "intensity-toggle", Lightbulb, undefined, undefined, LightbulbOff);
-        this.addCommand("intensityRangeCommand", "Set Intensity range", 1, "-", "intensity-range-toggle", RayStartEnd, undefined, " ");
+        this.addCommand("distanceAttenuationCommand", "Distance Attenuation", Blur, "", "distance-attenuation", BlurOff, undefined, undefined);
+        this.addCommand("rgbCommand", "Toggle RGB", LightbulbOn, "+", "rgb-toggle", Lightbulb, undefined, undefined);
+
         this.setState({ready: true});
 
+        this.onMsg("show-rgb-toggle", ()=>{
+            this.setState({showRgbToggle: true})
+        });
         this.onMsg("color-boost-toggle", () => {
             if (this.state.colorBoostVisible == "none") {
                 this.onMsg("mouse-down", () => {
@@ -47,7 +49,6 @@ export default class SseCameraToolbar extends SseToolbar {
                 })
             }
             this.setState({pointSizeVisible: "none"});
-            this.setState({intensityRangeVisible: "none"});
             this.setState({colorBoostVisible: this.state.colorBoostVisible == "none" ? "" : "none"});
         });
         this.onMsg("point-size-toggle", () => {
@@ -58,20 +59,7 @@ export default class SseCameraToolbar extends SseToolbar {
                 })
             }
             this.setState({colorBoostVisible: "none"});
-            this.setState({intensityRangeVisible: "none"});
             this.setState({pointSizeVisible: this.state.pointSizeVisible == "none" ? "" : "none"});
-        });
-
-        this.onMsg("intensity-range-toggle", () => {
-            if (this.state.intensityRangeVisible == "none") {
-                this.onMsg("mouse-down", () => {
-                    this.setState({intensityRangeVisible: "none"});
-                    this.forgetMsg("mouse-down");
-                })
-            }
-            this.setState({colorBoostVisible: "none"});
-            this.setState({pointSizeVisible: "none"});
-            this.setState({intensityRangeVisible: this.state.intensityRangeVisible == "none" ? "" : "none"});
         });
     }
 
@@ -99,9 +87,6 @@ export default class SseCameraToolbar extends SseToolbar {
             };
         const pointSizeSliderStyle =
             {display: this.state.pointSizeVisible, height: "150px", position: "absolute", left: "-30px", top: "-110px"};
-        
-        const intensityRangeSliderStyle =
-            {display: this.state.intensityRangeVisible, height: "150px", position: "absolute", left: "-30px", top: "-110px"};
 
         return (
             <div className="vflex flex-justify-content-space-around sse-toolbar no-shrink">
@@ -115,19 +100,8 @@ export default class SseCameraToolbar extends SseToolbar {
                     {this.renderCommand("viewTopCommand")}
                 </div>
                 <div className="grow v group flex-justify-content-end">
+                    {this.state.showRgbToggle ? this.renderCommand("rgbCommand") : null}
                     {this.renderCommand("distanceAttenuationCommand")}
-                    {this.renderCommand("intensityCommand")}
-                    <div className="relative">
-                        {this.renderCommand("intensityRangeCommand")}
-                        <Range
-                            style={intensityRangeSliderStyle}
-                            vertical={true}
-                            min={0}
-                            max={500}
-                            value={this.state.data.intensityRange}
-                            onChange={this.dataChange('intensityRange', "intensity-range").bind(this)}
-                        />
-                    </div>
                     <div className="relative">
                         {this.renderCommand("pointSizeCommand")
                         }

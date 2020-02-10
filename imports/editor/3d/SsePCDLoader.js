@@ -142,12 +142,10 @@ export default class SsePCDLoader {
                 var position = [];
                 var color = [];
                 var label = [];
-                var intensity = [];
                 var payload = [];
                 var rgb = [];
 
                 if (PCDheader.data === 'ascii') {
-                    console.log("ASCII PCD");
                     const meta = PCDheader;
 
                     let camPosition = new THREE.Vector3(parseFloat(meta.viewpoint.tx), parseFloat(meta.viewpoint.ty),
@@ -196,10 +194,6 @@ export default class SsePCDLoader {
                         color.push(0);
                         color.push(0);
 
-                        // Push Intensity
-                        var _intensity = parseFloat(line[offset.intensity]) || 0;
-                        //item.intensity = _intensity
-                        intensity.push(_intensity);
                     }
                 }
 
@@ -208,7 +202,6 @@ export default class SsePCDLoader {
                 // binary compressed PCD files organize their data as structure of arrays: XXYYZZRGBRGB
                 // that requires a totally different parsing approach compared to non-compressed data
                 if ( PCDheader.data === 'binary_compressed' ) {
-                    console.log("BINARY PCD COMPRESSED");
                     var dataview = new DataView( data.slice( PCDheader.headerLen, PCDheader.headerLen + 8 ) );
                     var compressedSize = dataview.getUint32( 0, true );
                     var decompressedSize = dataview.getUint32( 4, true );
@@ -307,8 +300,6 @@ export default class SsePCDLoader {
                         }
                         
                         // Initialize colors
-                        // rgb.push(dataview.getUint8( row + offset.rgb, true));
-                        // rgb.push(dataview.getUint8( row + offset.rgb + 1, true));
                         var colorRGB = dataview.getUint32( row + offset.rgb, true);
                         var r = (colorRGB >> 16) & 0x0000ff;
                         var g = (colorRGB >> 8) & 0x0000ff;
@@ -345,9 +336,7 @@ export default class SsePCDLoader {
                 name = /([^\/]*)/.exec(name);
                 name = name[1].split('').reverse().join('');
                 mesh.name = url;
-
-                return {position, label, intensity, header: PCDheader, rgb};
-
+                return {position, label, header: PCDheader, rgb};
             }
 
         };
