@@ -143,9 +143,9 @@ export default class SsePCDLoader {
                 var color = [];
                 var label = [];
                 var payload = [];
+                var rgb = [];
 
                 if (PCDheader.data === 'ascii') {
-
                     const meta = PCDheader;
 
                     let camPosition = new THREE.Vector3(parseFloat(meta.viewpoint.tx), parseFloat(meta.viewpoint.ty),
@@ -159,6 +159,7 @@ export default class SsePCDLoader {
                     var lines = pcdData.split('\n');
                     let pt, item;
                     for (var i = 0, l = lines.length - 1; i < l; i++) {
+                        if(lines[i] == ""){continue;}  // Sometimes empty lines are inserted...
 
                         var line = lines[i].split(' ');
                         item = {};
@@ -192,6 +193,7 @@ export default class SsePCDLoader {
                         color.push(0);
                         color.push(0);
                         color.push(0);
+
                     }
                 }
 
@@ -259,7 +261,7 @@ export default class SsePCDLoader {
                     var dataview = new DataView( data, PCDheader.headerLen );
                     var offset = PCDheader.offset;
                     let pt, item;
-
+                    // test.push(offset);
                     let camPosition = new THREE.Vector3(parseFloat(PCDheader.viewpoint.tx), parseFloat(PCDheader.viewpoint.ty),
                         parseFloat(PCDheader.viewpoint.tz));
                     let camQuaternion = new THREE.Quaternion(PCDheader.viewpoint.qx,
@@ -272,14 +274,14 @@ export default class SsePCDLoader {
                         const x = dataview.getFloat32( row + offset.x, true );
                         const y = dataview.getFloat32( row + offset.y, true );
                         const z = dataview.getFloat32( row + offset.z, true );
-
+                        
                         pt = new THREE.Vector3(x, y, z);
 
                         if (!this.serverMode) {
                             pt = pt.sub(camPosition);
                             pt.applyQuaternion(camQuaternion);
                         }
-                        
+
                         item.x = pt.x;
                         position.push(pt.x);
 
@@ -296,8 +298,14 @@ export default class SsePCDLoader {
                             item.classIndex = 0;
                             label.push(0);
                         }
-
+                        
                         // Initialize colors
+                        var colorRGB = dataview.getUint32( row + offset.rgb, true);
+                        var r = (colorRGB >> 16) & 0x0000ff;
+                        var g = (colorRGB >> 8) & 0x0000ff;
+                        var b = (colorRGB ) & 0x0000ff;
+                        rgb.push([r, g, b]);
+                        
                         color.push(0);
                         color.push(0);
                         color.push(0);
@@ -319,7 +327,7 @@ export default class SsePCDLoader {
 
                 geometry.computeBoundingSphere();
 
-                var material = new THREE.PointsMaterial({size: 2, vertexColors: THREE.VertexColors});
+                var material = new THREE.PointsMaterial({size: 2, color: 0xE9A96F});
                 material.sizeAttenuation = false;
 
                 // build mesh
@@ -328,9 +336,7 @@ export default class SsePCDLoader {
                 name = /([^\/]*)/.exec(name);
                 name = name[1].split('').reverse().join('');
                 mesh.name = url;
-
-                return {position, label, header: PCDheader};
-
+                return {position, label, header: PCDheader, rgb};
             }
 
         };

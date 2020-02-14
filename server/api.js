@@ -53,6 +53,7 @@ function generatePCDOutput(req, res, next) {
         res.charset = 'UTF-8';
     }
 
+
     readFile(pcdFile, (err, content) => {
         if (err) {
             res.end("Error while parsing PCD file.")
@@ -60,17 +61,18 @@ function generatePCDOutput(req, res, next) {
 
         const loader = new THREE.PCDLoader(true);
         const pcdContent = loader.parse(content.buffer, "");
-
+        const hasRgb = pcdContent.rgb.length > 0;
         const head = pcdContent.header;
-        const count = parseInt(pcdContent.position.length / 3);
+        const rgb2int = rgb => rgb[2] + 256 * rgb[1] + 256 * 256 * rgb[0];
+
         let out = "VERSION .7\n";
-        out += "FIELDS x y z label object\n";
-        out += "SIZE 4 4 4 4 4\n";
-        out += "TYPE F F F I I\n";
-        out += "COUNT 1 1 1 1 1\n";
-        out += "WIDTH " + count + "\n";
-        out += "HEIGHT 1\n";
-        out += "POINTS " + count + "\n";
+        out += hasRgb ? "FIELDS x y z rgb label object\n" : "FIELDS x y z label object\n";
+        out += hasRgb ? "SIZE 4 4 4 4 4 4\n" : "SIZE 4 4 4 4 4\n";
+        out += hasRgb ? "TYPE F F F I I I\n" : "TYPE F F F I I\n";
+        out += hasRgb ? "COUNT 1 1 1 1 1 1\n" : "COUNT 1 1 1 1 1\n";
+        out += "WIDTH " + pcdContent.header.width + "\n";
+        out += "HEIGHT " + pcdContent.header.height + "\n";
+        out += "POINTS " + pcdContent.header.width*pcdContent.header.height + "\n";
         out += "VIEWPOINT " + head.viewpoint.tx;
         out += " " + head.viewpoint.ty;
         out += " " + head.viewpoint.tz;
@@ -110,7 +112,11 @@ function generatePCDOutput(req, res, next) {
 
                     switch (i % 3) {
                         case 0:
-                            obj = {x: v};
+                            if (hasRgb) {
+                                obj = {rgb: pcdContent.rgb[position], x: v};
+                            }else{
+                                obj = {x: v};
+                            }
                             break;
                         case 1:
                             obj.y = v;
@@ -118,6 +124,9 @@ function generatePCDOutput(req, res, next) {
                         case 2:
                             obj.z = v;
                             out += obj.x + " " + obj.y + " " + obj.z + " ";
+                            if (hasRgb) {
+                                out += rgb2int(obj.rgb) + " ";
+                            }
                             out += labels[position] + " ";
                             const assignedObject = objectByPointIndex.get(position);
                             if (assignedObject != undefined)

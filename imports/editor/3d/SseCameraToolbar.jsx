@@ -3,7 +3,7 @@ import React from 'react';
 import Slider from 'rc-slider';
 import {
     ArrowCollapseDown, ArrowCollapseLeft, ArrowCollapseRight, ArrowCollapseUp, ArrowExpandDown, Blur, BlurOff,
-    Brightness6, CubeSend, ImageFilterTiltShift, Rotate3D, Target, Video
+    Brightness6, CubeSend, ImageFilterTiltShift, Rotate3D, Target, Video, Lightbulb, LightbulbOn
 } from 'mdi-material-ui';
 import SseToolbar from "../../common/SseToolbar";
 
@@ -12,7 +12,8 @@ export default class SseCameraToolbar extends SseToolbar {
         super();
         this.state = {
             colorBoostVisible: "none",
-            pointSizeVisible: "none"
+            pointSizeVisible: "none",
+            showRgbToggle: false
         };
         this.state.data = {
             colorBoost: 0
@@ -32,9 +33,14 @@ export default class SseCameraToolbar extends SseToolbar {
         this.addCommand("orientationCommand", "Pointcloud Orientation", false, "-", "orientation-change", Rotate3D, undefined, " ");
         this.addCommand("colorBoostCommand", "Color Intensity", 1, "-", "color-boost-toggle", Brightness6, undefined, " ");
         this.addCommand("pointSizeCommand", "Point Size", 1, "-", "point-size-toggle", ImageFilterTiltShift, undefined, " ");
-        this.addCommand("distanceAttenuationCommand", "Distance Attenuation", Blur, "", "distance-attenuation", BlurOff, undefined, undefined, BlurOff);
+        this.addCommand("distanceAttenuationCommand", "Distance Attenuation", Blur, "", "distance-attenuation", BlurOff, undefined, undefined);
+        this.addCommand("rgbCommand", "Toggle RGB", LightbulbOn, "+", "rgb-toggle", Lightbulb, undefined, undefined);
+
         this.setState({ready: true});
 
+        this.onMsg("show-rgb-toggle", ()=>{
+            this.setState({showRgbToggle: true})
+        });
         this.onMsg("color-boost-toggle", () => {
             if (this.state.colorBoostVisible == "none") {
                 this.onMsg("mouse-down", () => {
@@ -94,6 +100,7 @@ export default class SseCameraToolbar extends SseToolbar {
                     {this.renderCommand("viewTopCommand")}
                 </div>
                 <div className="grow v group flex-justify-content-end">
+                    {this.state.showRgbToggle ? this.renderCommand("rgbCommand") : null}
                     {this.renderCommand("distanceAttenuationCommand")}
                     <div className="relative">
                         {this.renderCommand("pointSizeCommand")

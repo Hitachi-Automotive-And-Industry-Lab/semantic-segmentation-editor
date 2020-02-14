@@ -118,8 +118,8 @@ export default class SseToolbar extends React.Component {
         }
     }
 
-    addCommand(name, title, isToggle, shortcut, actionMessage, icon, initialState, legend, icon2) {
-        const command = {name, title, isToggle, shortcut, actionMessage, icon, legend, icon2};
+    addCommand(name, title, isToggle, shortcut, actionMessage, icon, initialState, legend) {
+        const command = {name, title, isToggle, shortcut, actionMessage, icon, legend};
         this.commands.set(name, command);
         if (isToggle) {
             if (typeof isToggle == "boolean")
