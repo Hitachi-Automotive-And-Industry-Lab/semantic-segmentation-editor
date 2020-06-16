@@ -190,6 +190,14 @@ export default class SsePCDLoader {
                         }
 
                         // Initialize colors
+                        if (offset.rgb != undefined) {
+                            var colorRGB = parseInt(line[offset.rgb]);
+                            var r = (colorRGB >> 16) & 0x0000ff;
+                            var g = (colorRGB >> 8) & 0x0000ff;
+                            var b = (colorRGB) & 0x0000ff;
+                            rgb.push([r, g, b]);
+                        }
+
                         color.push(0);
                         color.push(0);
                         color.push(0);
@@ -249,6 +257,14 @@ export default class SsePCDLoader {
                         }
 
                         // Initialize colors
+                        if (offset.rgb != undefined) {
+                            var colorRGB = dataview.getUint32(row + offset.rgb, true);
+                            var r = (colorRGB >> 16) & 0x0000ff;
+                            var g = (colorRGB >> 8) & 0x0000ff;
+                            var b = (colorRGB) & 0x0000ff;
+                            rgb.push([r, g, b]);
+                        }
+
                         color.push(0);
                         color.push(0);
                         color.push(0);
@@ -274,7 +290,7 @@ export default class SsePCDLoader {
                         const x = dataview.getFloat32( row + offset.x, true );
                         const y = dataview.getFloat32( row + offset.y, true );
                         const z = dataview.getFloat32( row + offset.z, true );
-                        
+
                         pt = new THREE.Vector3(x, y, z);
 
                         if (!this.serverMode) {
@@ -298,14 +314,16 @@ export default class SsePCDLoader {
                             item.classIndex = 0;
                             label.push(0);
                         }
-                        
+
                         // Initialize colors
-                        var colorRGB = dataview.getUint32( row + offset.rgb, true);
-                        var r = (colorRGB >> 16) & 0x0000ff;
-                        var g = (colorRGB >> 8) & 0x0000ff;
-                        var b = (colorRGB ) & 0x0000ff;
-                        rgb.push([r, g, b]);
-                        
+                        if (offset.rgb != undefined) {
+                            var colorRGB = dataview.getUint32(row + offset.rgb, true);
+                            var r = (colorRGB >> 16) & 0x0000ff;
+                            var g = (colorRGB >> 8) & 0x0000ff;
+                            var b = (colorRGB) & 0x0000ff;
+                            rgb.push([r, g, b]);
+                        }
+
                         color.push(0);
                         color.push(0);
                         color.push(0);
