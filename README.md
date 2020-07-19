@@ -173,7 +173,8 @@ marking)
   - Mouse middle button (or Ctrl+Click): Change the target of the camera
   - Mouse right button: Used to select multiple points at the same time depending on the current Selection Tool and
   Selection Mode.
-
+  - WASD keys: Move through the scene 
+  
 ### PCD support
 
  - Supported input PCD format: ASCII, Binary and Binary compressed
