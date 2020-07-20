@@ -26,7 +26,7 @@
     "@material-ui/core": "1.5.1",
     "@material-ui/icons": "1.1.0",
     "@tweenjs/tween.js": "17.2.0",
-    "acorn": "5.7.1",
+    "acorn": "5.7.4",
     "body-parser": "1.18.3",
     "canvas-filters": "1.0.1",
     "color": "3.0.0",
