@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import {createWriteStream, lstatSync, readdirSync, readFile, readFileSync} from "fs";
 import {basename, extname, join} from "path";
 import configurationFile from "./config";
+const demoMode = Meteor.settings.configuration["demo-mode"];
 
 Meteor.startup(() => {
 
@@ -17,6 +18,7 @@ const {imagesFolder, pointcloudsFolder} = configurationFile;
 
     WebApp.connectHandlers.use(bodyParser.raw({limit: "200mb", type: 'application/octet-stream'}));
     WebApp.connectHandlers.use('/save', function (req, res) {
+        if (demoMode) return;
         const fileToSave = pointcloudsFolder + decodeURIComponent(req.url).replace("/save", "");
         const dir = fileToSave.match("(.*\/).*")[1];
         shell.mkdir('-p', dir);
