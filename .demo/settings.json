@@ -2,8 +2,7 @@
   "configuration": {
     "images-folder": "",
     "internal-folder": "",
-    "demo-mode": true,
-    "google-analytics": "<head><script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-123193983-1\"></script><script>  window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);} gtag('js', new Date());gtag('config', 'UA-123193983-1');</script></head>"
+    "demo-mode": true
   },
   "sets-of-classes": [
     {

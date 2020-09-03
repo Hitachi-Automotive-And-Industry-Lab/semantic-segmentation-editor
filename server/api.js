@@ -10,11 +10,6 @@ WebApp.connectHandlers.use("/api/pcdtext", generatePCDOutput.bind({fileMode: fal
 WebApp.connectHandlers.use("/api/pcdfile", generatePCDOutput.bind({fileMode: true}));
 WebApp.connectHandlers.use("/api/listing", imagesListing);
 
-const demoMode = Meteor.settings.configuration["demo-mode"];
-if (demoMode) {
-    WebApp.connectHandlers.use("/g.html", (req, res, next) => res.end(Meteor.settings.configuration["google-analytics"]));
-}
-
 const {imagesFolder, pointcloudsFolder, setsOfClassesMap} = configurationFile;
 new SsePCDLoader(THREE);
 
