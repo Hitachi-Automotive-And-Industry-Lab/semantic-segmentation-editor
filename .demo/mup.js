@@ -7,7 +7,7 @@ module.exports = {
         }
     },
     app: {
-        name: 'empploy-mup',
+        name: 'sse-mup',
         path: '../',
         servers: {
             one: {},
