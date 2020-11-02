@@ -19,6 +19,7 @@ import SseCameraToolbar from "./SseCameraToolbar";
 import SseObjectToolbar from "./SseObjectToolbar";
 import tippy from "tippy.js";
 import SseTooltips3d from "./SseTooltips3d";
+import SseSearchList from "../../common/SseSearchList";
 
 
 export default class SseApp3d extends React.Component {
@@ -63,11 +64,19 @@ export default class SseApp3d extends React.Component {
                         <div className="vflex w100 h100 box1">
                             <SseToolbar3d/>
                             <div className="hflex grow box2 h0">
-                                <SseClassChooser
-                                    mode="3d"
-                                    classesSets={this.classesSets
-                                    }
-                                />
+                                <div className="leftside" style={{ width: "300x" }}>
+                                    <div>
+                                        <SseClassChooser
+                                            mode="3d"
+                                            classesSets={this.classesSets
+                                            }
+                                        />
+                                    </div>
+                                    <div className="search" style={{ "color": "black" }}>
+                                        <SseSearchList
+                                            imageUrl={this.props.imageUrl} />
+                                    </div>     
+                                </div>                           
                                 <div
                                     className="vflex grow relative">
                                     <div

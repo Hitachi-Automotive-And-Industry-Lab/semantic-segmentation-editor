@@ -67,7 +67,7 @@ Meteor.methods({
             SseProps.upsert({key: "tags"}, {key: "tags", value: Array.from(tags)});
         },
     */
-    'images'(folder, pageIndex, pageLength) {
+   'images'(folder, pageIndex, pageLength) {
         const isDirectory = source => lstatSync(source).isDirectory();
         const isImage = source => {
             const stat = lstatSync(source);
@@ -99,39 +99,60 @@ Meteor.methods({
                 name: basename(path),
                 url: `/browse/${pageIndex}/${pageLength}/` + encodeURIComponent(folderSlash + path)
             }
-        };
+    };
 
-        pageIndex = parseInt(pageIndex);
-        pageLength = parseInt(pageLength);
-        const folderSlash = folder ? decodeURIComponent(folder) + "/" : "/";
-        const leaf = join(config.imagesFolder, (folderSlash ? folderSlash : ""));
+    pageIndex = parseInt(pageIndex);
+    pageLength = parseInt(pageLength);
+    const folderSlash = folder ? decodeURIComponent(folder) + "/" : "/";
+    const leaf = join(config.imagesFolder, (folderSlash ? folderSlash : ""));
 
-        const existing = existsSync(leaf);
+    const existing = existsSync(leaf);
 
-        if (existing && !isDirectory(leaf)) {
-            return {error: leaf + " is a file but should be a folder. Check the documentation and your settings.json"};
-        }
-        if (!existing) {
-            return {error: leaf + " does not exists. Check the documentation and your settings.json"};
-        }
+    if (existing && !isDirectory(leaf)) {
+        return {error: leaf + " is a file but should be a folder. Check the documentation and your settings.json"};
+    }
+    if (!existing) {
+        return {error: leaf + " does not exists. Check the documentation and your settings.json"};
+    }
 
-        const dirs = getDirectories(leaf);
-        const images = getImages(leaf);
-        const res = {
-            folders: dirs.map(getFolderDesc),
-            images: images.map(getImageDesc).slice(pageIndex * pageLength, pageIndex * pageLength + pageLength),
-            imagesCount: images.length
-        };
+    const dirs = getDirectories(leaf);
+    const images = getImages(leaf);
 
-        if (pageIndex * pageLength + pageLength < images.length) {
-            res.nextPage = `/browse/${pageIndex + 1}/${pageLength}/` + (encodeURIComponent(folder) || "");
-        }
-        if (pageIndex > 0) {
-            res.previousPage = `/browse/${pageIndex - 1}/${pageLength}/` + (encodeURIComponent(folder) || "");
-        }
+    const dbfolder = (folder == null) ? "" : decodeURIComponent(folder);
+    // add images to database
+    for (var i = 0; i < images.length; i++) {
+        SseSamples.upsert({url: encodeURIComponent(images[i].slice(10))}, 
+        {$setOnInsert: {
+            folder: dbfolder,
+            file: basename(images[i])
+        }}, 
+        (err, affected)=>{
+            // console.log("affected: ", affected);
+            if (err) {
+                console.log(err);
+            }      
+        });
+    }
 
-        return res;
-    },
+    cursor = SseSamples.find({url: {$in: images.map((u)=>encodeURIComponent(u.slice(10)))}}, {url: 1});
+    allImages = cursor.map((obj) => leaf + decodeURIComponent(obj['url']));
+
+    const res = {
+        folders: dirs.map(getFolderDesc),
+        images: allImages.map(getImageDesc).slice(pageIndex * pageLength, pageIndex * pageLength + pageLength),
+        imagesCount: allImages.length,
+        allimages: allImages.map(getImageDesc)
+    };
+
+    if (pageIndex * pageLength + pageLength < images.length) {
+        res.nextPage = `/browse/${pageIndex + 1}/${pageLength}/` + (encodeURIComponent(folder) || "");
+    }
+    if (pageIndex > 0) {
+        res.previousPage = `/browse/${pageIndex - 1}/${pageLength}/` + (encodeURIComponent(folder) || "");
+    }
+
+    return res;
+},
 
     'saveData'(sample) {
         if (demoMode) return;
@@ -140,6 +161,8 @@ Meteor.methods({
         sample.folder = path.substring(1, path.lastIndexOf("/"));
         sample.file = path.substring(path.lastIndexOf("/") + 1);
         sample.lastEditDate = new Date();
+        sample.url = sample.url.slice(1);
+        sample.labeled = 1;
         if (!sample.firstEditDate)
             sample.firstEditDate = new Date();
         if (sample.tags) {
