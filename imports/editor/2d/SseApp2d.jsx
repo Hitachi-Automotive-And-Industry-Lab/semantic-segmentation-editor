@@ -21,6 +21,7 @@ import SseSetOfClasses from "../../common/SseSetOfClasses";
 import SseTooltips2d from "./SseTooltips2d";
 import tippy from "tippy.js";
 import $ from "jquery";
+import SseSearchList from "../../common/SseSearchList";
 
 export default class SseApp2d extends React.Component {
 
@@ -73,7 +74,16 @@ export default class SseApp2d extends React.Component {
                         <div className="vflex w100 h100 box1">
                             <SseToolbar2d/>
                             <div className="hflex grow box2 relative h0">
-                                {ready ? <SseClassChooser classesSets={this.classesSets}/> : null}
+                                <div className="leftside" style={{ width: "300x" }}>
+                                    <div>
+                                        {ready ? <SseClassChooser classesSets={this.classesSets}/> : null}
+                                    </div>
+                                    <div className="search" style={{ "color": "black" }}>
+                                        <SseSearchList
+                                            imageUrl={this.props.imageUrl} />
+                                    </div>     
+                                </div> 
+
                                 <div id="canvasContainer" className="grow relative">
                                     {ready
                                         ? <SseEditor2d

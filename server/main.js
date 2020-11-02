@@ -4,9 +4,12 @@ import {basename, extname, join} from "path";
 import url from "url";
 import ColorScheme from "color-scheme";
 import config from "./config";
+import configurationFile from "./config";
 const demoMode = Meteor.settings.configuration["demo-mode"];
 
 let {classes} = config;
+
+let {imagesFolder} = configurationFile;
 
 Meteor.methods({
     'getClassesSets'() {
@@ -117,10 +120,32 @@ Meteor.methods({
 
         const dirs = getDirectories(leaf);
         const images = getImages(leaf);
+
+        const dbfolder = (folder == null) ? "" : decodeURIComponent(folder);
+
+        // remove files that deleted
+        SseSamples.remove({url: {$nin: images.map((u)=>encodeURIComponent(u.slice(imagesFolder.length)))}});
+        // add images to database
+        for (var i = 0; i < images.length; i++) {
+            SseSamples.upsert({url: encodeURIComponent(images[i].slice(imagesFolder.length))}, 
+            {$setOnInsert: {
+                folder: dbfolder,
+                file: basename(images[i])
+            }}, 
+            (err, affected)=>{
+                if (err) {
+                    console.log(err);
+                }      
+            });
+        }
+        cursor = SseSamples.find({url: {$in: images.map((u)=>encodeURIComponent(u.slice(imagesFolder.length)))}, folder: dbfolder}, {url: 1});
+        allImages = cursor.map((obj) => leaf + decodeURIComponent(obj['url']).slice(1));
+
         const res = {
             folders: dirs.map(getFolderDesc),
-            images: images.map(getImageDesc).slice(pageIndex * pageLength, pageIndex * pageLength + pageLength),
-            imagesCount: images.length
+            images: allImages.map(getImageDesc).slice(pageIndex * pageLength, pageIndex * pageLength + pageLength),
+            imagesCount: allImages.length,
+            allimages: allImages.map(getImageDesc)
         };
 
         if (pageIndex * pageLength + pageLength < images.length) {
@@ -140,6 +165,7 @@ Meteor.methods({
         sample.folder = path.substring(1, path.lastIndexOf("/"));
         sample.file = path.substring(path.lastIndexOf("/") + 1);
         sample.lastEditDate = new Date();
+        sample.url = sample.url.slice(1);
         if (!sample.firstEditDate)
             sample.firstEditDate = new Date();
         if (sample.tags) {

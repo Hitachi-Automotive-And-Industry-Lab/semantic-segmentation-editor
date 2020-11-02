@@ -2,7 +2,7 @@ import React from 'react';
 import SseToolbar from "../../common/SseToolbar";
 import {
     ArrangeBringForward, ArrangeSendBackward, AutoFix, CallMerge, CheckOutline, ContentCut, CropLandscape,
-    CursorDefaultOutline, DeleteForever, Download, Json, Looks, Redo, Undo, VectorPolygon
+    CursorDefaultOutline, DeleteForever, Download, Json, Looks, Redo, Undo, VectorPolygon, ArrowLeft, ArrowRight
 } from 'mdi-material-ui';
 import SseBranding from "../../common/SseBranding";
 
@@ -10,6 +10,8 @@ export default class SseToolbar2d extends SseToolbar {
 
     componentDidMount() {
         super.componentDidMount();
+        this.addCommand("pageUpCommand","Page Up",0,"pageup","pageup",ArrowLeft,undefined,undefined);
+        this.addCommand("pageDownCommand","Page Down",0,"pagedown","pagedown",ArrowRight,undefined,undefined);
         this.addCommand("undoCommand", "Undo", false, "Ctrl+Z", "undo", Undo, "disabled");
         this.addCommand("redoCommand", "Redo", false, "Ctrl+Y", "redo", Redo, "disabled");
         this.addCommand("pointerCommand", "Manipulation Tool", 1, "Alt", "pointer", CursorDefaultOutline);
@@ -34,6 +36,10 @@ export default class SseToolbar2d extends SseToolbar {
             <div className="hflex flex-justify-content-space-around sse-toolbar no-shrink">
 
                 <SseBranding/>
+                <div className="group">
+                    {this.renderCommand("pageUpCommand")}
+                    {this.renderCommand("pageDownCommand")}
+                </div>
                 <div className="group">
                     {this.renderCommand("undoCommand")}
                     {this.renderCommand("redoCommand")}
