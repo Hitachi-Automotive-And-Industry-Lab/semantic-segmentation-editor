@@ -124,7 +124,7 @@ Meteor.methods({
         const dbfolder = (folder == null) ? "" : decodeURIComponent(folder);
 
         // remove files that deleted
-        SseSamples.remove({url: {$nin: images.map((u)=>encodeURIComponent(u.slice(imagesFolder.length)))}});
+        SseSamples.remove({folder: dbfolder, url: {$nin: images.map((u)=>encodeURIComponent(u.slice(imagesFolder.length)))}});
         // add images to database
         for (var i = 0; i < images.length; i++) {
             SseSamples.upsert({url: encodeURIComponent(images[i].slice(imagesFolder.length))}, 
