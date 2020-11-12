@@ -36,7 +36,8 @@ class SseSearchList extends React.Component {
         super();
         this.url = decodeURIComponent(url.imageUrl);
         this.folder = this.url.substring(1, this.url.lastIndexOf("/")).slice(0);
-	    this.db = {}
+	this.db = {};
+	this.fileType = this.url.replace(/[^\.]+/, "");
         SseMsg.register(this);
     }
 
@@ -48,7 +49,7 @@ class SseSearchList extends React.Component {
                 {
                     var j = i;
                     for (j = i+1; j < db.length; j++) {
-                        if (db[j].file.slice(-4)==".pcd") {
+                        if (db[j].file.slice(-4)==this.fileType) {
                             window.location.pathname = ("/edit/" + db[j].url); 
                             break;
                         }
@@ -66,7 +67,7 @@ class SseSearchList extends React.Component {
                 { 
                     var j = i;
                     for (j = i-1; j >= 0; j--) {
-                        if (db[j].file.slice(-4)==".pcd") {
+                        if (db[j].file.slice(-4)==this.fileType) {
                             window.location.pathname = ("/edit/" + db[j].url); 
                             break;
                         }
