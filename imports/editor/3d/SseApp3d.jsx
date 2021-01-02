@@ -1,25 +1,19 @@
+import { MuiThemeProvider } from '@material-ui/core/styles';
+import { Autorenew } from 'mdi-material-ui';
+import { Meteor } from "meteor/meteor";
 import React from 'react';
-
-import SseClassChooser from "../../common/SseClassChooser";
-
-import {darkBaseTheme, MuiThemeProvider} from '@material-ui/core/styles';
-
-import {Meteor} from "meteor/meteor";
-import SseSnackbar from "../../common/SsePopup";
-import {withTracker} from 'meteor/react-meteor-data';
-import SseBottomBar from "../../common/SseBottomBar";
-
-import SseConfirmationDialog from "../../common/SseConfirmationDialog";
-import {Autorenew} from 'mdi-material-ui';
-import SseTheme from "../../common/SseTheme";
-import SseSetOfClasses from "../../common/SseSetOfClasses";
-import SseEditor3d from "./SseEditor3d";
-import SseToolbar3d from "./SseToolbar3d";
-import SseCameraToolbar from "./SseCameraToolbar";
-import SseObjectToolbar from "./SseObjectToolbar";
 import tippy from "tippy.js";
+import SseBottomBar from "../../common/SseBottomBar";
+import SseClassChooser from "../../common/SseClassChooser";
+import SseConfirmationDialog from "../../common/SseConfirmationDialog";
+import SseSnackbar from "../../common/SsePopup";
+import SseSetOfClasses from "../../common/SseSetOfClasses";
+import SseTheme from "../../common/SseTheme";
+import SseCameraToolbar from "./SseCameraToolbar";
+import SseEditor3d from "./SseEditor3d";
+import SseObjectToolbar from "./SseObjectToolbar";
+import SseToolbar3d from "./SseToolbar3d";
 import SseTooltips3d from "./SseTooltips3d";
-
 
 export default class SseApp3d extends React.Component {
 
