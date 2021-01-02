@@ -124,10 +124,10 @@ Meteor.methods({
         };
 
         if (pageIndex * pageLength + pageLength < images.length) {
-            res.nextPage = `/browse/${pageIndex + 1}/${pageLength}/` + (encodeURIComponent(folder) || "");
+            res.nextPage = `/browse/${pageIndex + 1}/${pageLength}/` + (folder ? encodeURIComponent(folder) : "");
         }
         if (pageIndex > 0) {
-            res.previousPage = `/browse/${pageIndex - 1}/${pageLength}/` + (encodeURIComponent(folder) || "");
+            res.previousPage = `/browse/${pageIndex - 1}/${pageLength}/` + (folder ? encodeURIComponent(folder) : "");
         }
 
         return res;
