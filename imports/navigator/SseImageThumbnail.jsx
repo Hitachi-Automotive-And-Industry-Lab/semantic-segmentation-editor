@@ -1,7 +1,6 @@
 import React from 'react';
-import {CardText, CardTitle} from '@material-ui/core';
 import {withStyles} from '@material-ui/core/styles';
-import {Approval} from "mdi-material-ui";
+import {Check} from "mdi-material-ui";
 import SseGlobals from "../common/SseGlobals";
 
 class SseImageThumbnail extends React.Component {
@@ -16,7 +15,7 @@ class SseImageThumbnail extends React.Component {
             const durl = decodeURIComponent(image.url);
             name = durl.substring(1 + durl.lastIndexOf("/"));
         }
-        const {classes} = this.props;
+        
         return (
             <div className="sse-thumbnail vflex flex-align-items-center">
                 <img
@@ -24,7 +23,7 @@ class SseImageThumbnail extends React.Component {
                 <div className="w100 text-align-center text-crop">{name}</div>
                 <div>
                     {this.props.annotated
-                        ? <Approval/>
+                        ? <Check/>
                         : null}
                 </div>
 

@@ -26,9 +26,10 @@ export default class SseClassChooser extends SseToolbar {
 
     getIcon(objDesc) {
         if (MDI[objDesc.icon]) {
-            return MDI[objDesc.icon]();
+            const Comp = MDI[objDesc.icon];
+            return <Comp/>;
         } else {
-            return MDI.Label();
+            return <MDI.Label/>;
         }
     }
 
@@ -133,7 +134,7 @@ export default class SseClassChooser extends SseToolbar {
     shouldComponentUpdate(np, ns) {
         if (this.state.mode == "set-chooser" && ns.mode == "normal")
             this.sendMsg("dismiss-not-enough-classes");
-        return true;
+            return true;
     }
 
     renderDialog() {

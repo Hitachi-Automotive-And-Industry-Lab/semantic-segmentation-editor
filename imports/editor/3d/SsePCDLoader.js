@@ -132,7 +132,7 @@ export default class SsePCDLoader {
                     return PCDheader;
                 }
 
-                var textData = this.serverMode ? (new Buffer(data)).toString() : THREE.LoaderUtils.decodeText(data);
+                var textData = this.serverMode ? (Buffer.from(data)).toString() : THREE.LoaderUtils.decodeText(data);
 
                 // parse header (always ascii format)
                 var PCDheader = parseHeader(textData);

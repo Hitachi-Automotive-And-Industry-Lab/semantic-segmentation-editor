@@ -2,7 +2,7 @@ import React from 'react';
 import SseToolbar from "../../common/SseToolbar";
 import {
     ArrangeBringForward, ArrangeSendBackward, AutoFix, CallMerge, CheckOutline, ContentCut, CropLandscape,
-    CursorDefaultOutline, DeleteForever, Download, Json, Looks, Redo, Undo, VectorPolygon
+    CursorDefaultOutline, DeleteForever, Download, CodeJson, Looks, Redo, Undo, VectorPolygon
 } from 'mdi-material-ui';
 import SseBranding from "../../common/SseBranding";
 
@@ -23,7 +23,7 @@ export default class SseToolbar2d extends SseToolbar {
         this.addCommand("mergeCommand", "Merge Polygons", false, "M", "merge", CallMerge, "disabled");
         this.addCommand("followCommand", "Follow Polygon Outline", false, "F", "follow", Looks, "disabled");
         this.addCommand("enterCommand", "Create Polygon", false, "Enter", "closepolygon", CheckOutline, "disabled");
-        this.addCommand("jsonCommand", "Show JSON Output", false, "J", "openJsonView", Json);
+        this.addCommand("jsonCommand", "Show JSON Output", false, "J", "openJsonView", CodeJson);
         this.addCommand("downloadCommand", "Download", false, "D", "download", Download);
         this.sendMsg("pointer");
 

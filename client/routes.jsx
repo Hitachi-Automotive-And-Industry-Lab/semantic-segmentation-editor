@@ -1,6 +1,6 @@
 import React from 'react';
 import {Route, Router, Redirect} from 'react-router';
-import createBrowserHistory from 'history/createBrowserHistory';
+import {createBrowserHistory} from 'history';
 import SseEditorApp from "../imports/editor/SseEditorApp";
 import SseNavigatorApp from "../imports/navigator/SseNavigatorApp";
 import SseAllAnnotated from "../imports/navigator/SseAllAnnotated";
