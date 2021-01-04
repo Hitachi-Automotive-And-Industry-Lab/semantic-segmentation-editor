@@ -20,7 +20,7 @@ export default class SseTools {
     }
 
     bindCallbacks(){
-        ["onMouseDown","onMouseUp","onMouseMove","onMouseDrag", "onKeyDown", "onKeyUp"].forEach(callback=>{
+        ["onMouseDown","onMouseUp","onMouseMove","onMouseDrag", "onKeyDown", "onKeyUp", "cancel"].forEach(callback=>{
             if (typeof this[callback] == "function")
                 this.paperTool[callback] = this[callback].bind(this);
         })
