@@ -268,6 +268,7 @@ export default class SseEditor3d extends React.Component {
 
     deleteSelectedObject() {
         if (this.selectedObject) {
+            this.changeClassOfSelection(0);
             this.objects.delete(this.selectedObject);
             this.selectedObject = undefined;
             this.sendMsg("object-select", {value: undefined});
@@ -1751,6 +1752,7 @@ export default class SseEditor3d extends React.Component {
             if (this.currentTool.mouseDown)
                 this.currentTool.mouseDown.bind(this.currentTool)(ev);
             this.sendMsg("mouse-down", ev);
+            this.invalidateCanvasMouse();
         }
     }
 
