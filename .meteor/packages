@@ -20,7 +20,7 @@ shell-server            # Server-side component of the `meteor shell` command
 # insecure@1.0.7                # Allow all DB writes from clients (for prototyping)
 react-meteor-data
 session@1.2.0
-less@2.8.0
+less@3.0.1
 http@1.4.2
 static-html
 dynamic-import
