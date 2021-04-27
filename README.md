@@ -41,14 +41,10 @@ It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactj
 3. The tool runs by default on port 80, you can change the mapping in `sse-docker-stack.yml`
 ```
 wget https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/sse-docker-stack.yml
-SSE_IMAGES=YOUR_IMAGES_PATH docker-compose -f sse-docker-stack.yml up
-```
-
-(Optional) You can use your own configuration file based on `settings.json` to customize classes data
-```
 wget https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/settings.json
 METEOR_SETTINGS=$(cat ./settings.json) SSE_IMAGES=YOUR_IMAGES_PATH docker-compose -f stack.yml up
 ```
+(Optional) You can modify `settings.json` to customize classes data.
 
 ### Running from source
 
