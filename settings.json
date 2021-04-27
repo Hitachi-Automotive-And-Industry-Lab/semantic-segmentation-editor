@@ -1,7 +1,8 @@
 {
   "configuration": {
     "images-folder": "",
-    "internal-folder": ""
+    "internal-folder": "",
+    "demo-mode": false
   },
   "sets-of-classes": [
     {
