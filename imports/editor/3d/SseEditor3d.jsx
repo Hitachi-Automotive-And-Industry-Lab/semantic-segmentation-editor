@@ -818,7 +818,7 @@ export default class SseEditor3d extends React.Component {
         const outside = new Set();
         this.cloudData.forEach((pt, idx) => {
             const pixel = this.getPixel(pt);
-            if (this.visibleIndices.has(idx)) {
+            if (this.visibleIndices.has(idx) && this.frustrumIndices.has(idx)) {
                 const inPolygon = PointInPoly.pointInPolyWindingNumber([pixel.pixelX, pixel.pixelY], polygon);
                 if (inPolygon) {
                     inside.add(idx);
