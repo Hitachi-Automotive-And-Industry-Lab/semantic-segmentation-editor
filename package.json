@@ -50,7 +50,7 @@
     "react-router": "5.2.0",
     "react-router-dom": "5.2.0",
     "serve-static": "1.13.2",
-    "shelljs": "0.8.2",
+    "shelljs": "0.8.5",
     "simplify-js": "1.2.3",
     "three": "0.112.1",
     "tippy.js": "2.5.2",
