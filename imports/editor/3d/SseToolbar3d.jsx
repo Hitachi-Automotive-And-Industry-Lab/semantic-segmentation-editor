@@ -3,7 +3,7 @@ import React from 'react';
 import SseToolbar from "../../common/SseToolbar";
 import SseBranding from "../../common/SseBranding";
 import {
-    CircleOutline, FileDownloadOutline, Gesture, Minus, Plus, PlusMinus, Redo, SquareOutline,
+    CircleOutline, FileDownloadOutline, Flare, Gesture, Minus, Plus, PlusMinus, Redo, SquareOutline,
     Undo
 } from 'mdi-material-ui';
 
@@ -26,6 +26,7 @@ export default class SseToolbar3d extends SseToolbar {
         this.addCommand("selectionAddCommand", "Selection Mode: Add", 2, "Y", "selection-mode-add", Plus, undefined, undefined);
         this.addCommand("selectionToggleCommand", "Selection Mode: Toggle", 2, "U", "selection-mode-toggle", PlusMinus, undefined, undefined);
         this.addCommand("selectionRemoveCommand", "Selection Mode: Remove", 2, "I", "selection-mode-remove", Minus, undefined, undefined);
+        this.addCommand("selectionSimilarCommand", "Selection Mode: Same RGB", 2, "O", "selection-mode-similar", Flare, undefined, undefined);
 
         this.addCommand("moreClusterCommand", "More Cluster", false, "ctrl+up", "cluster-more", Plus, undefined, "Ctrl \u2191");
         this.addCommand("lessClusterCommand", "Less Cluster", false, "ctrl+down", "cluster-less", Minus, undefined, "Ctrl \u2193");
@@ -62,6 +63,7 @@ export default class SseToolbar3d extends SseToolbar {
                         {this.renderCommand("selectionAddCommand")}
                         {this.renderCommand("selectionToggleCommand")}
                         {this.renderCommand("selectionRemoveCommand")}
+                        {this.renderCommand("selectionSimilarCommand")}
                     </div>
                 </div>
                 <div className="vflex">
