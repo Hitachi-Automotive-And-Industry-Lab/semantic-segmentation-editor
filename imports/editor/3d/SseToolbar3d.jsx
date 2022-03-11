@@ -11,7 +11,10 @@ export default class SseToolbar3d extends SseToolbar {
 
     constructor() {
         super();
-        this.state = {pointSize: 2}
+        this.state = {
+            pointSize: 2,
+            selectionModeSimilarToggle: false
+        }
     }
 
 
@@ -41,14 +44,19 @@ export default class SseToolbar3d extends SseToolbar {
         this.addCommand("redoCommand", "Redo", false, "Ctrl+Y", "redo", Redo, "disabled");
         this.addCommand("downloadTextCommand", "PCD Output as Text", false, "", "downloadText", FileDownloadOutline);
         this.addCommand("downloadFileCommand", "PCD Output as File", false, "", "downloadFile", FileDownloadOutline);
+
         this.sendMsg("selector");
         this.sendMsg("selection-mode-add");
+
+        this.onMsg("show-rgb-toggle", () => {
+            this.setState({ selectionModeSimilarToggle: true })
+        });
     }
 
     render() {
         return (
             <div className="hflex flex-justify-content-space-around sse-toolbar toolbar-3d no-shrink">
-                <SseBranding/>
+                <SseBranding />
                 <div className="vflex">
                     <div className="tool-title">Selection Tool</div>
                     <div className="hflex">
@@ -63,7 +71,7 @@ export default class SseToolbar3d extends SseToolbar {
                         {this.renderCommand("selectionAddCommand")}
                         {this.renderCommand("selectionToggleCommand")}
                         {this.renderCommand("selectionRemoveCommand")}
-                        {this.renderCommand("selectionSimilarCommand")}
+                        {this.state.selectionModeSimilarToggle ? this.renderCommand("selectionSimilarCommand") : null}
                     </div>
                 </div>
                 <div className="vflex">
