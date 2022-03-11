@@ -879,6 +879,11 @@ export default class SseEditor3d extends React.Component {
                 message += " (x: " + round2(oc.x)
                     + "m, y: " + round2(oc.y)
                     + "m, z: " + round2(oc.z) + "m)";
+                    if (this.rgbArray.length > 0)
+                    {
+                        const color = this.rgbArray[this.highlightedIndex]
+                        message += "(RGB: " + color[0]+ "," + color[1] + "," + color[2] + ")"
+                    }
                 this.sendMsg("bottom-right-label", {message})
             }
         } else {
@@ -965,7 +970,7 @@ export default class SseEditor3d extends React.Component {
         } else if (this.selectionMode == "remove") {
             this.removeIndexFromSelection(idx);
         }
-        else if (this.selectionMode == "similar") {
+        else if (this.rgbArray.length > 0 && this.selectionMode == "similar") {
             this.addSimilar(idx);
         }        
         else {
