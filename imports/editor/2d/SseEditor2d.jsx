@@ -994,7 +994,7 @@ export default class SseEditor2d extends React.Component {
 
         this.onMsg("strokes", (arg) => this.showStrokes(arg.value));
         this.onMsg("closepolygon", () => (
-            (Paper.tool == this.polygonTool ? this.polygonTool : this.floodTool).endPolygon()));
+            (Paper.tool == this.polygonTool.paperTool ? this.polygonTool : this.floodTool).endPolygon()));
 
         this.onMsg("active-soc", arg => {
             if (this.activeSoc != arg.value) {
