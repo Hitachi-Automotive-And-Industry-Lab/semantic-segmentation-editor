@@ -399,6 +399,7 @@ export default class SseEditor3d extends React.Component {
         this.onMsg("selection-mode-add", () => this.selectionMode = "add");
         this.onMsg("selection-mode-toggle", () => this.selectionMode = "toggle");
         this.onMsg("selection-mode-remove", () => this.selectionMode = "remove");
+        this.onMsg("selection-mode-similar", () => this.selectionMode = "similar");
 
         this.onMsg("classSelection", (arg) => {
             this.activeClassIndex = arg.descriptor.classIndex;
@@ -878,6 +879,11 @@ export default class SseEditor3d extends React.Component {
                 message += " (x: " + round2(oc.x)
                     + "m, y: " + round2(oc.y)
                     + "m, z: " + round2(oc.z) + "m)";
+                    if (this.rgbArray.length > 0)
+                    {
+                        const color = this.rgbArray[this.highlightedIndex]
+                        message += "(RGB: " + color[0]+ "," + color[1] + "," + color[2] + ")"
+                    }
                 this.sendMsg("bottom-right-label", {message})
             }
         } else {
@@ -964,6 +970,9 @@ export default class SseEditor3d extends React.Component {
         } else if (this.selectionMode == "remove") {
             this.removeIndexFromSelection(idx);
         }
+        else if (this.rgbArray.length > 0 && this.selectionMode == "similar") {
+            this.addSimilar(idx);
+        }        
         else {
             if (this.selection.has(idx))
                 this.removeIndexFromSelection(idx);
@@ -971,6 +980,19 @@ export default class SseEditor3d extends React.Component {
                 this.addIndexToSelection(idx);
             }
         }
+    }
+    addSimilar(idx)
+    {
+        const color = this.rgbArray[idx]
+        this.rgbArray.forEach((pt, pos) => {
+            const current_color = this.rgbArray[pos]
+            if (color.length == current_color.length && color.every((value, index) => value == current_color[index]))
+            {
+                this.selection.add(pos);
+                
+            }
+        })
+        this.invalidateColor();
     }
 
     drawPolyLine(context, pts, color, xField = 0, yField = 1, close) {

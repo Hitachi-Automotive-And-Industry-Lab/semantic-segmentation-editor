@@ -1,5 +1,5 @@
 import React from 'react';
-import {Rotate3D} from "mdi-material-ui";
+import { Rotate3D } from "mdi-material-ui";
 
 export default class SseTooltips3d extends React.Component {
     render() {
@@ -22,6 +22,10 @@ export default class SseTooltips3d extends React.Component {
                 <p><strong>Remove Selection Mode</strong></p>
                 <p className="italic">With this mode, points are removed from to the current selection</p>
             </div>
+            <div id="selectionSimilarCommand">
+                <p><strong>Add all objects with the same color</strong></p>
+                <p className="italic">With this mode, all points with the same RGB color are added to the current selection</p>
+            </div>
             <div id="autoFocusCommandHelp">
                 <p>Automatically adapt the view to the current selection</p>
             </div>
@@ -32,7 +36,7 @@ export default class SseTooltips3d extends React.Component {
             </div>
             <div id="viewCameraCommandHelp">
                 <p>Move the camera to the origin.</p>
-                <p>Use <Rotate3D/> to change the orientation of the camera</p>
+                <p>Use <Rotate3D /> to change the orientation of the camera</p>
             </div>
             <div id="viewCenterCommandHelp">
                 <p>Adjust the view to fit all points</p>

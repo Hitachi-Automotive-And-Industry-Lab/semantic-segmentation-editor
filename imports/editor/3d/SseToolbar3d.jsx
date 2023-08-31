@@ -3,7 +3,7 @@ import React from 'react';
 import SseToolbar from "../../common/SseToolbar";
 import SseBranding from "../../common/SseBranding";
 import {
-    CircleOutline, FileDownloadOutline, Gesture, Minus, Plus, PlusMinus, Redo, SquareOutline,
+    CircleOutline, FileDownloadOutline, Flare, Gesture, Minus, Plus, PlusMinus, Redo, SquareOutline,
     Undo
 } from 'mdi-material-ui';
 
@@ -11,7 +11,10 @@ export default class SseToolbar3d extends SseToolbar {
 
     constructor() {
         super();
-        this.state = {pointSize: 2}
+        this.state = {
+            pointSize: 2,
+            selectionModeSimilarToggle: false
+        }
     }
 
 
@@ -26,6 +29,7 @@ export default class SseToolbar3d extends SseToolbar {
         this.addCommand("selectionAddCommand", "Selection Mode: Add", 2, "Y", "selection-mode-add", Plus, undefined, undefined);
         this.addCommand("selectionToggleCommand", "Selection Mode: Toggle", 2, "U", "selection-mode-toggle", PlusMinus, undefined, undefined);
         this.addCommand("selectionRemoveCommand", "Selection Mode: Remove", 2, "I", "selection-mode-remove", Minus, undefined, undefined);
+        this.addCommand("selectionSimilarCommand", "Selection Mode: Same RGB", 2, "O", "selection-mode-similar", Flare, undefined, undefined);
 
         this.addCommand("moreClusterCommand", "More Cluster", false, "ctrl+up", "cluster-more", Plus, undefined, "Ctrl \u2191");
         this.addCommand("lessClusterCommand", "Less Cluster", false, "ctrl+down", "cluster-less", Minus, undefined, "Ctrl \u2193");
@@ -40,14 +44,19 @@ export default class SseToolbar3d extends SseToolbar {
         this.addCommand("redoCommand", "Redo", false, "Ctrl+Y", "redo", Redo, "disabled");
         this.addCommand("downloadTextCommand", "PCD Output as Text", false, "", "downloadText", FileDownloadOutline);
         this.addCommand("downloadFileCommand", "PCD Output as File", false, "", "downloadFile", FileDownloadOutline);
+
         this.sendMsg("selector");
         this.sendMsg("selection-mode-add");
+
+        this.onMsg("show-rgb-toggle", () => {
+            this.setState({ selectionModeSimilarToggle: true })
+        });
     }
 
     render() {
         return (
             <div className="hflex flex-justify-content-space-around sse-toolbar toolbar-3d no-shrink">
-                <SseBranding/>
+                <SseBranding />
                 <div className="vflex">
                     <div className="tool-title">Selection Tool</div>
                     <div className="hflex">
@@ -62,6 +71,7 @@ export default class SseToolbar3d extends SseToolbar {
                         {this.renderCommand("selectionAddCommand")}
                         {this.renderCommand("selectionToggleCommand")}
                         {this.renderCommand("selectionRemoveCommand")}
+                        {this.state.selectionModeSimilarToggle ? this.renderCommand("selectionSimilarCommand") : null}
                     </div>
                 </div>
                 <div className="vflex">
