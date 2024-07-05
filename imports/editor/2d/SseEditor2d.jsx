@@ -88,7 +88,6 @@ export default class SseEditor2d extends React.Component {
         this.scaleFactor = scaleFactor;
         const fullScreenMatrix = new Paper.Matrix().translate(this.offsetX, this.offsetY).scale(scaleFactor);
         this.transformAllLayers(fullScreenMatrix);
-        this.disableSmoothing();
     }
 
     /**
@@ -1290,15 +1289,6 @@ export default class SseEditor2d extends React.Component {
 
 
     /**
-     * We want to see pixels when zooming
-     */
-    disableSmoothing() {
-        const canvas = $('#rasterCanvas').get(0);
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false;
-    }
-
-    /**
      * Adds the image to the raster layer when it's loaded.
      */
     imageLoaded() {
@@ -1315,6 +1305,7 @@ export default class SseEditor2d extends React.Component {
 
         this.rasterLayer.activate();
         this.raster = new Paper.Raster(image, new Paper.Point(this.imageWidth / 2, this.imageHeight / 2));
+        this.raster.smoothing = false;
         this.raster.visible = false;
 
         this.raster.onLoad = () => {
@@ -1332,7 +1323,6 @@ export default class SseEditor2d extends React.Component {
             fileName = fileName.substr(fileName.lastIndexOf('/') + 1);
             this.sendMsg("status", {message: fileName});
             this.fileName = fileName;
-            this.disableSmoothing();
             this.pointerTool.activate();
             this.undoRedo.init(document.URL, this.currentSample);
             this.setCurrentSample(this.currentSample); // Workaround for late registered components
