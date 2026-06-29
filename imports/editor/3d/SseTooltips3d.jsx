@@ -28,7 +28,7 @@ export default class SseTooltips3d extends React.Component {
             <div id="autoFilterCommandHelp">
                 <p>If an object is selected, only object's points are displayed</p>
                 <p>Otherwise the first selection gesture reduce displayed points</p>
-                <p>Right click anywhere without dragging to display again all points</p>
+                <p>Use Center View (X) to fit all points on screen</p>
             </div>
             <div id="viewCameraCommandHelp">
                 <p>Move the camera to the origin.</p>
@@ -39,6 +39,12 @@ export default class SseTooltips3d extends React.Component {
             </div>
             <div id="orientationCommandHelp">
                 <p>Camera Orientation: let's you choose top and front directions of the camera</p>
+            </div>
+            <div id="saveStatusHelp">
+                <p><strong>Saved</strong> — All changes are on the server; refresh is safe.</p>
+                <p><strong>Saving...</strong> — Save in progress; do not refresh yet.</p>
+                <p><strong>Unsaved changes</strong> — Last save failed; refresh will lose changes.</p>
+                <p><strong>Connection lost</strong> — Network unstable; wait for Saved before refreshing.</p>
             </div>
         </div>
 

@@ -7,6 +7,7 @@
   "sets-of-classes": [
     {
       "name": "Cityscapes", "objects": [
+      {"label": "background", "color": "#000000"},
       {"label": "VOID", "color": "#CFCFCF"},
       {"label": "Road", "color": "#804080", "icon": "Road"},
       {"label": "Sidewalk", "color": "#F423E8", "icon": "NaturePeople"},
@@ -43,6 +44,7 @@
     {
       "name": "AD20",
       "objects": [
+        {"label": "background", "color": "#000000"},
         {"label": "VOID", "color": "#CFCFCF"},
         {
           "label": "Void",
@@ -147,6 +149,7 @@
     },
     {
       "name": "33 Classes", "objects": [
+      {"label": "background", "color": "#000000"},
       {"label": "VOID", "color": "#CFCFCF"},
       {"label": "Class 1"},
       {"label": "Class 2"},

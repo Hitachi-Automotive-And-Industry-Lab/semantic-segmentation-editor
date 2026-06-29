@@ -4,6 +4,7 @@ import {basename} from "path";
 import {readFile} from "fs";
 import * as THREE from 'three';
 import SsePCDLoader from "../imports/editor/3d/SsePCDLoader";
+import {resolveInside} from "./pathUtils";
 
 WebApp.connectHandlers.use("/api/json", generateJson);
 WebApp.connectHandlers.use("/api/pcdtext", generatePCDOutput.bind({fileMode: false}));
@@ -12,6 +13,22 @@ WebApp.connectHandlers.use("/api/listing", imagesListing);
 
 const {imagesFolder, pointcloudsFolder, setsOfClassesMap} = configurationFile;
 new SsePCDLoader(THREE);
+
+function logPCDExportError(message, context, err) {
+    const details = Object.assign({}, context);
+    if (err) {
+        details.errorCode = err.code;
+        details.errorMessage = err.message;
+    }
+    console.error("[SSE] PCD export failed:", message, details);
+}
+
+function finishPCDExportError(res, statusCode, message) {
+    if (!res.headersSent) {
+        res.statusCode = statusCode;
+    }
+    res.end(message);
+}
 
 function imagesListing(req, res, next) {
     const all = SseSamples.find({}, {
@@ -33,19 +50,38 @@ function generateJson(req, res, next) {
     if (item) {
         const soc = setsOfClassesMap.get(item.socName);
         item.objects.forEach(obj => {
-            obj.label = soc.objects[obj.classIndex].label;
+            obj.label = soc && soc.objects[obj.classIndex] ? soc.objects[obj.classIndex].label : String(obj.classIndex);
         });
         res.end(JSON.stringify(item, null, 1));
-    }else{
+    } else {
         res.end("{}");
     }
 }
 
 function generatePCDOutput(req, res, next) {
-    const pcdFile = imagesFolder + decodeURIComponent(req.url);
+    let decodedUrl;
+    let pcdFile;
+    let labelFile;
+    let objectFile;
+    try {
+        const requestPath = (req.url || "").split(/[?#]/)[0];
+        decodedUrl = decodeURIComponent(requestPath);
+        pcdFile = resolveInside(imagesFolder, requestPath);
+        labelFile = resolveInside(pointcloudsFolder, requestPath, ".labels");
+        objectFile = resolveInside(pointcloudsFolder, requestPath, ".objects");
+    } catch (err) {
+        finishPCDExportError(res, 400, "Invalid PCD export path.");
+        return;
+    }
     const fileName = basename(pcdFile);
-    const labelFile = pointcloudsFolder + decodeURIComponent(req.url) + ".labels";
-    const objectFile = pointcloudsFolder + decodeURIComponent(req.url) + ".objects";
+    const exportContext = {
+        url: req.url,
+        decodedUrl,
+        mode: this.fileMode ? "file" : "text",
+        pcdFile,
+        labelFile,
+        objectFile
+    };
 
     if (this.fileMode) {
         res.setHeader('Content-disposition', 'attachment; filename=DOC'.replace("DOC", fileName));
@@ -56,11 +92,20 @@ function generatePCDOutput(req, res, next) {
 
     readFile(pcdFile, (err, content) => {
         if (err) {
-            res.end("Error while parsing PCD file.")
+            logPCDExportError("Cannot read PCD file.", exportContext, err);
+            finishPCDExportError(res, 404, "Error while parsing PCD file.");
+            return;
         }
 
         const loader = new THREE.PCDLoader(true);
-        const pcdContent = loader.parse(content.buffer, "");
+        let pcdContent;
+        try {
+            pcdContent = loader.parse(content.buffer, "");
+        } catch (parseErr) {
+            logPCDExportError("Cannot parse PCD file.", exportContext, parseErr);
+            finishPCDExportError(res, 500, "Error while parsing PCD file.");
+            return;
+        }
         const hasRgb = pcdContent.rgb.length > 0;
         const head = pcdContent.header;
         const rgb2int = rgb => rgb[2] + 256 * rgb[1] + 256 * 256 * rgb[0];
@@ -81,24 +126,43 @@ function generatePCDOutput(req, res, next) {
         out += " " + head.viewpoint.qy;
         out += " " + head.viewpoint.qz + "\n";
         out += "DATA ascii\n";
-        res.write(out);
-        out = "";
         readFile(labelFile, (labelErr, labelContent) => {
             if (labelErr) {
-                res.end("Error while parsing labels file.")
+                logPCDExportError("Cannot read labels file.", exportContext, labelErr);
+                finishPCDExportError(res, 404, "Error while parsing labels file.");
+                return;
             }
-            const labels = SseDataWorkerServer.uncompress(labelContent);
+
+            let labels;
+            try {
+                labels = SseDataWorkerServer.uncompress(labelContent);
+            } catch (uncompressErr) {
+                logPCDExportError("Cannot uncompress labels file.", exportContext, uncompressErr);
+                finishPCDExportError(res, 500, "Error while parsing labels file.");
+                return;
+            }
 
             readFile(objectFile, (objectErr, objectContent) => {
                 let objectsAvailable = true;
                 if (objectErr) {
                     objectsAvailable = false;
+                    console.warn("[SSE] PCD export objects file unavailable; using object=-1.", Object.assign({}, exportContext, {
+                        errorCode: objectErr.code,
+                        errorMessage: objectErr.message
+                    }));
                 }
 
                 const objectByPointIndex = new Map();
 
                 if (objectsAvailable) {
-                    const objects = SseDataWorkerServer.uncompress(objectContent);
+                    let objects;
+                    try {
+                        objects = SseDataWorkerServer.uncompress(objectContent);
+                    } catch (uncompressErr) {
+                        logPCDExportError("Cannot uncompress objects file.", exportContext, uncompressErr);
+                        finishPCDExportError(res, 500, "Error while parsing objects file.");
+                        return;
+                    }
                     objects.forEach((obj, objIndex) => {
                         obj.points.forEach(ptIdx => {
                             objectByPointIndex.set(ptIdx, objIndex);
@@ -106,6 +170,8 @@ function generatePCDOutput(req, res, next) {
                     });
                 }
                 let obj;
+                res.write(out);
+                out = "";
 
                 pcdContent.position.forEach((v, i) => {
                     const position = Math.floor(i / 3);

@@ -15,22 +15,35 @@ export default class SseClassChooser extends SseToolbar {
         this.classesSets = props.classesSets;
         this.classesSetByName = new Map();
         this.classesSets.map(cset => {
-            this.classesSetByName.set(cset.name, cset)
+            this.classesSetByName.set(cset.name, cset);
         });
         this.state = {
             counters: {},
-            soc: this.classesSets[0],
-            activeClassIndex: 0
+            soc: null,
+            activeClassIndex: 0,
+            mode: null,
         };
     }
 
     getIcon(objDesc) {
-        if (MDI[objDesc.icon]) {
+        if (objDesc && MDI[objDesc.icon]) {
             const Comp = MDI[objDesc.icon];
             return <Comp/>;
-        } else {
-            return <MDI.Label/>;
         }
+        return <MDI.Label/>;
+    }
+
+    resolveClassesSet(name) {
+        const soc = name ? this.classesSetByName.get(name) : undefined;
+        if (soc) {
+            return soc;
+        }
+        if (name) {
+            console.warn(
+                `[SSE] Set of classes "${name}" is not in settings; using "${this.classesSets[0].name}".`
+            );
+        }
+        return this.classesSets[0];
     }
 
     messages() {
@@ -47,29 +60,22 @@ export default class SseClassChooser extends SseToolbar {
             this.invalidate();
         });
 
-        this.onMsg("currentSample", (arg) => {
-            if (arg.data.socName)
-                this.changeClassesSet(arg.data.socName);
-        });
-
         this.onMsg("editor-ready", (arg) => {
-            if (arg && arg.value && arg.value.socName)
-                this.sendMsg("active-soc", {value: this.classesSetByName.get(arg.value.socName)});
-            else
-                this.sendMsg("active-soc", {value: this.classesSets[0]});
+            const socName = arg && arg.socName;
+            if (socName) {
+                this.sendMsg("active-soc", {value: this.resolveClassesSet(socName)});
+            } else {
+                this.setState({mode: 'required-set-chooser'});
+            }
         });
 
         this.onMsg("active-soc", (arg) => {
             this.soc = arg.value;
+            this.setState({soc: arg.value});
             this.displayAll();
-
         });
 
-        this.onMsg("active-soc-name", (arg) => {
-            const value = this.classesSetByName.get(arg.value);
-            this.sendMsg("active-soc", {value});
-        });
-
+        this.onMsg("toggle-background-visibility", () => this.toggleBackgroundVisibility());
     }
 
     displayAll() {
@@ -78,7 +84,7 @@ export default class SseClassChooser extends SseToolbar {
                 if (k.toString().startsWith("mute") || k.toString().startsWith("solo")) {
                     delete this.state[k];
                 }
-            })
+            });
         }
     }
 
@@ -91,26 +97,40 @@ export default class SseClassChooser extends SseToolbar {
 
     muteOrSolo(name, argument, idx) {
         if (this.state.counters[argument.classIndex] ||
-            (!this.state.counters[argument.classIndex] && this.state[name + idx])) {
+            (!this.state.counters[argument.classIndex] && this.state[name + idx]) ||
+            (name === "mute" && this.state["solo" + idx])) {
             this.toggleButton(name, idx);
             this.sendMsg(name, argument);
         }
     }
 
-    changeClassesSet(name) {
-        const newSoc = this.classesSetByName.get(name);
-        const usedClasses = Object.keys(this.state.counters).filter(x => this.state.counters[x] > 0);
-        const missing = [];
-        usedClasses.forEach(x => {
-            if (!newSoc.labels.has(x)) {
-                missing.push(x);
-            }
-        });
-        //debugger;
-        const t = this.state.counters;
-        let maxClassIndex = Math.max(...Object.keys(t).filter(k => t[k] > 0));
+    toggleBackgroundVisibility() {
+        if (!this.soc) {
+            return;
+        }
+        const backgroundIndex = this.soc.descriptors.findIndex(objDesc => objDesc.classIndex === 0);
+        if (backgroundIndex !== -1) {
+            this.muteOrSolo("mute", this.soc.descriptors[backgroundIndex], backgroundIndex);
+        }
+    }
 
-        if (newSoc.descriptors.length >= maxClassIndex) {
+    changeClassesSet(name) {
+        let newSoc = name ? this.classesSetByName.get(name) : undefined;
+        if (!newSoc) {
+            if (name) {
+                console.warn(
+                    `[SSE] Set of classes "${name}" is not in settings; using "${this.classesSets[0].name}".`
+                );
+            }
+            newSoc = this.classesSets[0];
+        }
+        const t = this.state.counters;
+        const usedClassIndices = Object.keys(t)
+            .filter(k => t[k] > 0)
+            .map(k => parseInt(k));
+        let maxClassIndex = usedClassIndices.length ? Math.max(...usedClassIndices) : 0;
+
+        if (newSoc.descriptors.length > maxClassIndex) {
             this.setState({
                 soc: newSoc,
                 classes: newSoc.descriptors,
@@ -118,49 +138,74 @@ export default class SseClassChooser extends SseToolbar {
                 activeClassIndex: 0
             });
             this.sendMsg("active-soc", {value: newSoc});
-
-        }
-        else
-            this.sendMsg("alert",
-                {
-                    variant: "error",
-                    forceCloseMessage: "dismiss-not-enough-classes",
-                    message: "This set of classes only supports " + newSoc.descriptors.length
+        } else {
+            this.sendMsg("alert", {
+                variant: "error",
+                forceCloseMessage: "dismiss-not-enough-classes",
+                message: "This set of classes only supports " + newSoc.descriptors.length
                     + " different classes (index from 0 to " + (newSoc.descriptors.length - 1) +
                     ") but the current maximum class index for your data is " + maxClassIndex
-                });
+            });
+        }
     }
 
     shouldComponentUpdate(np, ns) {
         if (this.state.mode == "set-chooser" && ns.mode == "normal")
             this.sendMsg("dismiss-not-enough-classes");
-            return true;
+        return true;
     }
 
     renderDialog() {
-        return (<Dialog open={this.state.mode == "set-chooser"}>
-            <DialogTitle>Sets of Object Classes</DialogTitle>
-            <DialogContent>
-                <div className="vflex">
-                    <span>Choose which set to use:</span>
-                    <div className="hflex w100 wrap">
-                        {this.classesSets.map((cset) => (
-                            <Button
-                                onClick={(e) => this.changeClassesSet(cset.name)}
-                                key={cset.name}>{cset.name + (cset.name == this.state.soc.name ? " (current)" : "")}</Button>
-                        ))
-                        }
+        const {soc} = this.state;
+        return (
+            <Dialog open={this.state.mode == "set-chooser"}>
+                <DialogTitle>Sets of Object Classes</DialogTitle>
+                <DialogContent>
+                    <div className="vflex">
+                        <span>Choose which set to use:</span>
+                        <div className="hflex w100 wrap">
+                            {this.classesSets.map((cset) => (
+                                <Button
+                                    onClick={() => this.changeClassesSet(cset.name)}
+                                    key={cset.name}>
+                                    {cset.name + (soc && cset.name === soc.name ? " (current)" : "")}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => {
-                    this.setState({mode: "normal"})
-                }} color="primary">
-                    Cancel
-                </Button>
-            </DialogActions>
-        </Dialog>)
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => this.setState({mode: "normal"})} color="primary">
+                        Cancel
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        );
+    }
+
+    _renderRequiredSetChooser() {
+        return (
+            <Dialog open={true}>
+                <DialogTitle>Choose a Set of Object Classes</DialogTitle>
+                <DialogContent>
+                    <div className="vflex">
+                        <span>Select a labeling set to start annotating:</span>
+                        <div className="hflex w100 wrap" style={{marginTop: 8}}>
+                            {this.classesSets.map((cset) => (
+                                <Button
+                                    key={cset.name}
+                                    onClick={() => {
+                                        this.setState({mode: null});
+                                        this.sendMsg("active-soc", {value: cset});
+                                    }}>
+                                    {cset.name}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
     }
 
     initSetChange() {
@@ -168,24 +213,21 @@ export default class SseClassChooser extends SseToolbar {
     }
 
     render() {
+        const {soc, mode} = this.state;
         const smallIconStyle = {width: "25px", height: "25px", color: "darkgray"};
         const smallIconSelected = {width: "25px", height: "25px", color: "red"};
         return (
-
             <div className="sse-class-chooser vflex scroller"
                  style={{"backgroundColor": "#393536", "padding": "5px 5px 0 0"}}>
-                {this.state.soc.descriptors.map((objDesc, idx) => {
+                {soc && soc.descriptors.map((objDesc, idx) => {
                     const isSelected = objDesc.classIndex == this.state.activeClassIndex;
-                    return <div className="hflex flex-align-items-center no-shrink" key={objDesc.label}>
-                        <ChevronRight className="chevron" color={isSelected ? "primary" : "disabled"}/>
-                        <Button className="class-button"
-                                onDoubleClick={() => this.sendMsg("class-multi-select", {name: objDesc.label})}
-                                onClick={() => {
-                                    this.sendMsg('classSelection', {descriptor: objDesc});
-                                }}
-                                style={
-                                    {
-
+                    return (
+                        <div className="hflex flex-align-items-center no-shrink" key={objDesc.label}>
+                            <ChevronRight className="chevron" color={isSelected ? "primary" : "disabled"}/>
+                            <Button className="class-button"
+                                    onDoubleClick={() => this.sendMsg("class-multi-select", {name: objDesc.label})}
+                                    onClick={() => this.sendMsg('classSelection', {descriptor: objDesc})}
+                                    style={{
                                         "width": "100%",
                                         "minHeight": "20px",
                                         "margin": "1px",
@@ -194,29 +236,29 @@ export default class SseClassChooser extends SseToolbar {
                                         "border": isSelected ? "solid 1px #E53935" : "solid 1px black",
                                         "padding": "0 3px"
                                     }}>
-                            <div
-                                className="hflex flex-align-items-center w100">
-                                {this.getIcon(objDesc)}{objDesc.label}
-                            </div>
-                            <sup>{this.state.counters[objDesc.classIndex] > 0 ? this.state.counters[objDesc.classIndex] : ""}</sup>
-                        </Button>
-                        {this.props.mode == "3d" ?
-                            <div className="hflex">
-                                <IconButton
-                                    onClick={() => this.muteOrSolo("mute", objDesc, idx)}
-                                    style={this.state["mute" + idx] ? smallIconSelected : smallIconStyle}>
-                                    <EyeOff/>
-                                </IconButton>
-                                <IconButton
-                                    onClick={() => this.muteOrSolo("solo", objDesc, idx)}
-                                    style={this.state["solo" + idx] ? smallIconSelected : smallIconStyle}>
-                                    <Eye/>
-                                </IconButton>
-
-                            </div> : null}
-                    </div>
+                                <div className="hflex flex-align-items-center w100">
+                                    {this.getIcon(objDesc)}<span className="class-label" title={objDesc.label} data-tippy-delay="100">{objDesc.label}</span>
+                                </div>
+                                <sup>{this.state.counters[objDesc.classIndex] > 0 ? this.state.counters[objDesc.classIndex] : ""}</sup>
+                            </Button>
+                            {this.props.mode == "3d" ?
+                                <div className="hflex">
+                                    <IconButton
+                                        onClick={() => this.muteOrSolo("mute", objDesc, idx)}
+                                        style={this.state["mute" + idx] ? smallIconSelected : smallIconStyle}>
+                                        <EyeOff/>
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() => this.muteOrSolo("solo", objDesc, idx)}
+                                        style={this.state["solo" + idx] ? smallIconSelected : smallIconStyle}>
+                                        <Eye/>
+                                    </IconButton>
+                                </div> : null}
+                        </div>
+                    );
                 })}
-                <Button onClick={() => this.initSetChange()}>Classes Sets</Button>
+                {soc && <Button onClick={() => this.initSetChange()}>Classes Sets</Button>}
+                {mode === 'required-set-chooser' && this._renderRequiredSetChooser()}
                 {this.renderDialog()}
             </div>
         );

@@ -9,13 +9,16 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import SseMsg from "./SseMsg";
 import $ from "jquery";
+import tippy from "tippy.js";
+
+const SAVE_STATUS_HELP = "#saveStatusHelp";
 
 class SseBottomBar extends React.Component {
 
     constructor() {
         super();
         SseMsg.register(this);
-        this.state = {helpString: "", open: false, tags: []};
+        this.state = {helpString: "", open: false, tags: [], saveStatus: undefined};
         this.hooks = {};
     }
 
@@ -31,11 +34,37 @@ class SseBottomBar extends React.Component {
             this.currentSample = arg.data;
             this.setState({tags: this.currentSample.tags || []})
         });
+        this.onMsg("save-status", (arg) => {
+            this.setState({saveStatus: arg});
+        });
         this.retriggerMsg("currentSample");
+        this.retriggerMsg("save-status");
+        this.setupSaveStatusTooltip();
+    }
+
+    componentDidUpdate() {
+        this.setupSaveStatusTooltip();
     }
 
     componentWillUnmount(){
+        if (this.saveStatusNode && this.saveStatusNode._tippy)
+            this.saveStatusNode._tippy.destroy();
         SseMsg.unregister(this);
+    }
+
+    setupSaveStatusTooltip() {
+        if (!this.saveStatusNode || !$(SAVE_STATUS_HELP).length)
+            return;
+
+        if (this.saveStatusNode._tippy)
+            return;
+
+        tippy(this.saveStatusNode, {
+            theme: 'sse',
+            arrow: true,
+            delay: [200, 0],
+            html: SAVE_STATUS_HELP
+        });
     }
 
     handleOpen = () => {
@@ -66,9 +95,10 @@ class SseBottomBar extends React.Component {
     }
 
     render() {
+        const saveStatusHelp = $(SAVE_STATUS_HELP).length ? SAVE_STATUS_HELP : "";
 
         return (
-            <div className={this.props.className}
+            <div className={(this.props.className || "") + " sse-bottom-bar"}
                  style={{
                      "backgroundColor": "#393536",
                      "padding": "5px",
@@ -83,6 +113,16 @@ class SseBottomBar extends React.Component {
                     </div>
                     <SseText msgKey="bottom-right-label"/>
                 </div>
+                {this.state.saveStatus && this.state.saveStatus.message ?
+                    <div className="sse-save-status-container">
+                        <div
+                            className={"sse-save-status " + (this.state.saveStatus.state || "")}
+                            ref={node => this.saveStatusNode = node}
+                            title="Save status"
+                            data-tippy-html={saveStatusHelp}>
+                            {this.state.saveStatus.message}
+                        </div>
+                    </div> : null}
                 <Dialog open={this.state.open}>
                     <DialogTitle>Tags</DialogTitle>
                     <DialogContent>

@@ -1,4 +1,6 @@
 import {Random} from 'meteor/random';
+import {Meteor} from 'meteor/meteor';
+import {Tracker} from 'meteor/tracker';
 
 import React from 'react';
 import * as THREE from 'three';
@@ -25,6 +27,14 @@ const HALFPI = PI / 2;
 const modulo = (x) => (x % DOUBLEPI + DOUBLEPI) % DOUBLEPI;
 const moduloHalfPI = (x) => modulo(x + PI) - PI;
 const round2 = (x) => Math.round(x * 100) / 100;
+const SAVE_FAILURE_ALERT_THROTTLE_MS = 30000;
+const SPA_LEAVE_GUARD_MESSAGE = "Changes you made may not be saved.";
+const SAVE_STATUS = {
+    saved: {message: "Saved"},
+    saving: {message: "Saving..."},
+    unsaved: {message: "Unsaved changes"},
+    connectionLost: {message: "Connection lost"}
+};
 
 export default class SseEditor3d extends React.Component {
     constructor() {
@@ -51,6 +61,13 @@ export default class SseEditor3d extends React.Component {
         this.pixelProjection = new Map();
         this.highlightedIndex = undefined;
         this.dataManager = new SseDataManager();
+        this.saveAttemptId = 0;
+        this.saveStatusState = undefined;
+        this.saveStateBeforeConnectionLoss = undefined;
+        this.dirtySinceLastSave = false;
+        this.lastSaveFailureAlertAt = 0;
+        this.ddpConnected = true;
+        this.spaGuardEntry = {sseLeaveGuard: true};
         
         this.tweenDuration = 500;
 
@@ -179,7 +196,7 @@ export default class SseEditor3d extends React.Component {
 
         if (soloMode) {
             this.classesDescriptors.byIndex.forEach(classObj => {
-                classObj.visible = classObj.solo;
+                classObj.visible = classObj.solo && !classObj.mute;
             });
         } else {
             this.editingClassIndex = -1;
@@ -350,6 +367,17 @@ export default class SseEditor3d extends React.Component {
     componentDidMount() {
         SseMsg.register(this);
         this.init();
+        this.connectionTracker = Tracker.autorun(() => {
+            const connected = Meteor.status().connected;
+            this.ddpConnected = connected;
+            if (!connected) {
+                if (this.saveStatusState !== "connectionLost")
+                    this.saveStateBeforeConnectionLoss = this.saveStatusState;
+                this.updateSaveStatus("connectionLost");
+            } else if (this.saveStatusState === "connectionLost") {
+                this.updateSaveStatus(this.saveStateBeforeConnectionLoss);
+            }
+        });
         const changePointSize = (amount) => {
             const withAttenuation = {min: 0.01, max: .5, increment: 0.01};
             const withoutAttenuation = {min: 1, max: 5, increment: 0.5};
@@ -406,6 +434,9 @@ export default class SseEditor3d extends React.Component {
         });
 
         this.onMsg("active-soc", arg => {
+            if (!arg.value) {
+                return;
+            }
             if (this.activeSoc !== arg.value) {
                 this.activeSoc = arg.value;
                 if (!this.meta) {
@@ -418,7 +449,7 @@ export default class SseEditor3d extends React.Component {
 
                     this.invalidateColor();
                     this.displayAll();
-                    this.saveMeta();
+                    this.persistMeta();
                 }
                 this.generateColorCache();
             }
@@ -433,7 +464,8 @@ export default class SseEditor3d extends React.Component {
         this.onMsg("view-center", () => this.centerView());
 
 
-        this.sendMsg("editor-ready");
+        this.pendingServerMeta = SseSamples.findOne({url: this.props.imageUrl});
+        this.sendMsg("editor-ready", {socName: this.pendingServerMeta && this.pendingServerMeta.socName});
 
         this.onMsg("autoFilter", ({value}) => {
             this.autoFilterMode = value;
@@ -495,9 +527,43 @@ export default class SseEditor3d extends React.Component {
         }));
 
         this.onMsg("rgb-toggle", () => this.toggleRgbDisplay());
+
+        window.addEventListener("beforeunload", this.onBeforeUnload);
+        this.installSpaLeaveGuard();
     }
 
+    installSpaLeaveGuard() {
+        window.history.pushState(this.spaGuardEntry, "", window.location.href);
+        window.addEventListener("popstate", this.onPopState);
+    }
+
+    onPopState = () => {
+        if (!this.shouldBlockPageLeave()) {
+            window.history.back();
+            return;
+        }
+        if (!window.confirm(SPA_LEAVE_GUARD_MESSAGE)) {
+            window.history.pushState(this.spaGuardEntry, "", window.location.href);
+            return;
+        }
+        window.removeEventListener("popstate", this.onPopState);
+        window.history.back();
+    };
+
+    onBeforeUnload = (event) => {
+        if (!this.shouldBlockPageLeave())
+            return;
+        event.preventDefault();
+        event.returnValue = "";
+    };
+
     componentWillUnmount(){
+        window.removeEventListener("beforeunload", this.onBeforeUnload);
+        window.removeEventListener("popstate", this.onPopState);
+        if (window.history.state && window.history.state.sseLeaveGuard)
+            window.history.back();
+        if (this.connectionTracker)
+            this.connectionTracker.stop();
         SseMsg.unregister(this);
         this.canvasContainer.removeEventListener("mousedown", this.mouseDown.bind(this), false);
         this.canvasContainer.removeEventListener("mousemove", this.mouseMove.bind(this), false);
@@ -847,12 +913,8 @@ export default class SseEditor3d extends React.Component {
                 if (!this.autoFilterMode && this.autoFocusMode)
                     this.subsetFocus(this.selection);
             } else {
-                if (!this.mouse.dragged) {
-                    if (this.selection.size > 0) {
-                        this.clearSelection();
-                    } else {
-                        this.displayAll();
-                    }
+                if (!this.mouse.dragged && this.selection.size > 0) {
+                    this.clearSelection();
                 }
             }
         }
@@ -873,7 +935,10 @@ export default class SseEditor3d extends React.Component {
             const data = this.cloudData[this.highlightedIndex];
             const pj = this.getPixel(data);
             if (pj) {
-                let message = this.activeSoc.labelForIndex(data.classIndex);
+                const messageLabel = (this.activeSoc && data.classIndex < this.activeSoc.classesCount)
+                    ? this.activeSoc.labelForIndex(data.classIndex)
+                    : String(data.classIndex);
+                let message = messageLabel;
                 const oc = this.originalCoordinates(this.highlightedIndex);
                 message += " (x: " + round2(oc.x)
                     + "m, y: " + round2(oc.y)
@@ -913,7 +978,7 @@ export default class SseEditor3d extends React.Component {
 
     paintScene() {
         if (this.cloudData) {
-            if (this.displayRgb && this.rgbArray.length > 0) {
+            if (this.displayRgb && this.rgbArray && this.rgbArray.length > 0) {
                 this.cloudData.forEach((pt, idx) => {
                     var rgb = this.rgbArray[idx];
                     this.setColor(idx, {red: rgb[0] / 255, green: rgb[1] / 255, blue: rgb[2] / 255});
@@ -1283,22 +1348,31 @@ export default class SseEditor3d extends React.Component {
         }
     }
 
-    rotateGeometry(rx, ry, rz) {
+    rotateGeometry(rx, ry, rz, persistChanges = false) {
         this.meta.rotationX = rx || 0;
         this.meta.rotationY = ry || 0;
         this.meta.rotationZ = rz || 0;
         this.cloudGeometry.rotateX(this.meta.rotationX).rotateY(this.meta.rotationY).rotateZ(this.meta.rotationZ);
-        this.display(this.objects, this.positionArray, this.labelArray, this.rgbArray);
-        this.saveMeta();
+        this.display(this.objects, this.positionArray, this.currentLabelArray(), this.rgbArray);
+        if (persistChanges)
+            this.persistMeta();
+        else
+            this.saveMeta().catch(() => (0));
     }
 
     resetRotation() {
         const {rotationX, rotationY, rotationZ} = this.meta;
         this.cloudGeometry.rotateZ(-rotationZ || 0).rotateY(-rotationY || 0).rotateX(-rotationX || 0);
-        this.display(undefined, this.positionArray, this.labelArray, this.rgbArray);
+        this.display(this.objects, this.positionArray, this.currentLabelArray(), this.rgbArray);
         this.meta.rotationX = this.meta.rotationY = this.meta.rotationZ = 0;
         this.updateGlobalBox();
         this.invalidatePosition();
+    }
+
+    currentLabelArray() {
+        if (this.cloudData)
+            return this.cloudData.map(pt => pt.classIndex);
+        return this.labelArray;
     }
 
     endPointcloudOrientation(upDirection, frontDirection) {
@@ -1408,7 +1482,7 @@ export default class SseEditor3d extends React.Component {
         this.meta.rotationY = ry;
         this.meta.rotationZ = rz;
 
-        this.rotateGeometry(rx, ry, rz);
+        this.rotateGeometry(rx, ry, rz, true);
 
         let obj, idx = 0;
         this.positionArray.forEach((v, i) => {
@@ -1696,6 +1770,8 @@ export default class SseEditor3d extends React.Component {
         const item = this.cloudData[pointIndex];
         this.cloudData.byClassIndex[item.classIndex].delete(item);
         item.classIndex = classIndex;
+        if (this.labelArray)
+            this.labelArray[pointIndex] = classIndex;
         //this.updateMaximumClassIndex();
         if (!this.cloudData.byClassIndex[item.classIndex])
             this.cloudData.byClassIndex[item.classIndex] = new Set();
@@ -1723,10 +1799,16 @@ export default class SseEditor3d extends React.Component {
                 this.ctrlDown = true;
                 break;
             case 'Delete':
+            case 'd':
+            case 'D':
+                if (this.selectionIsEmpty())
+                    break;
                 this.selection.forEach(idx => {
                     this.assignNewClass(idx, 0);
                 });
                 this.updateClassFilter();
+                this.invalidateCounters();
+                this.saveAll();
                 break;
         }
     }
@@ -1771,7 +1853,6 @@ export default class SseEditor3d extends React.Component {
         if (this.mouse.dragged < 4 && this.mouseTargetIndex == undefined
             && (ev.button != 1 && !this.ctrlDown)) {
             this.clearSelection();
-            this.displayAll();
         }
 
         if (this.mouse.dragged < 4 && this.pendingOrientationArrow) {
@@ -1947,24 +2028,25 @@ export default class SseEditor3d extends React.Component {
                         break;
                 }
             });
-            const colorArray = [];
-            if(this.displayRgb){
-                if (rgbArray) {
-                    rgbArray.forEach((v, i) => {
-                        //this.cloudData[i].classIndex = v;
-                        const rgb = v;
-                        colorArray.push(rgb[0]/255, rgb[1]/255, rgb[2]/255);
-                    });
-                }
+            // Always assign classIndex so updateClassFilter and counters work regardless of display mode
+            if (labelArray) {
+                labelArray.forEach((v, i) => { if (this.cloudData[i]) this.cloudData[i].classIndex = v; });
+            } else {
+                this.cloudData.forEach(pt => { pt.classIndex = 0; });
             }
-            else{
-                if (labelArray) {
-                    labelArray.forEach((v, i) => {
-                        this.cloudData[i].classIndex = v;
-                        const rgb = this.activeSoc.colorForIndexAsRGBArray(v);
-                        colorArray.push(rgb[0], rgb[1], rgb[2]);
-                    });
-                }
+
+            const colorArray = [];
+            if (this.displayRgb && rgbArray) {
+                rgbArray.forEach(v => colorArray.push(v[0]/255, v[1]/255, v[2]/255));
+            } else if (labelArray) {
+                labelArray.forEach(v => {
+                    let rgb;
+                    try { rgb = this.activeSoc.colorForIndexAsRGBArray(v); }
+                    catch (e) { rgb = [0.5, 0.5, 0.5]; }
+                    colorArray.push(rgb[0], rgb[1], rgb[2]);
+                });
+            } else {
+                // dead branch kept for shape — colorArray stays empty, geometry gets default colors
             }
 
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionArray, 3));
@@ -2024,21 +2106,93 @@ export default class SseEditor3d extends React.Component {
     }
 
     saveBinaryLabels() {
-        this.dataManager.saveBinaryFile(this.props.imageUrl + ".labels", this.cloudData.map(x => x.classIndex));
+        return this.dataManager.saveBinaryFile(this.props.imageUrl + ".labels", this.cloudData.map(x => x.classIndex));
     }
 
     saveBinaryObjects() {
-        this.dataManager.saveBinaryFile(this.props.imageUrl + ".objects", Array.from(this.objects));
+        return this.dataManager.saveBinaryFile(this.props.imageUrl + ".objects", Array.from(this.objects));
     }
 
     saveAll() {
-        this.saveBinaryLabels();
-        this.saveBinaryObjects();
-        this.saveMeta();
+        const saveAttemptId = ++this.saveAttemptId;
+        this.markDirty();
+        this.updateSaveStatus("saving");
+
+        Promise.all([
+            this.saveBinaryLabels(),
+            this.saveBinaryObjects(),
+            this.saveMeta()
+        ]).then(() => {
+            if (saveAttemptId === this.saveAttemptId) {
+                this.clearDirty();
+                this.updateSaveStatus("saved");
+            }
+        }, () => {
+            if (saveAttemptId === this.saveAttemptId) {
+                const status = !this.ddpConnected || this.saveStatusState === "connectionLost" ? "connectionLost" : "unsaved";
+                if (status === "connectionLost")
+                    this.saveStateBeforeConnectionLoss = "unsaved";
+                this.updateSaveStatus(status);
+                this.notifySaveFailure();
+            }
+        });
     }
 
     saveMeta() {
-        Meteor.call("saveData", this.meta);
+        return new Promise((res, rej) => {
+            Meteor.call("saveData", this.meta, err => err ? rej(err) : res());
+        });
+    }
+
+    persistMeta() {
+        this.markDirty();
+        return this.saveMeta()
+            .then(() => {
+                this.clearDirty();
+                if (this.saveStatusState !== "connectionLost")
+                    this.updateSaveStatus("saved");
+            })
+            .catch(() => this.updateSaveStatus("unsaved"));
+    }
+
+    markDirty() {
+        this.dirtySinceLastSave = true;
+    }
+
+    clearDirty() {
+        this.dirtySinceLastSave = false;
+    }
+
+    shouldBlockPageLeave() {
+        if (this.saveStatusState === "saving" || this.saveStatusState === "unsaved")
+            return true;
+        if (this.saveStatusState === "connectionLost" && this.dirtySinceLastSave)
+            return true;
+        return false;
+    }
+
+    updateSaveStatus(state) {
+        this.saveStatusState = state;
+        if (!this.sendMsg)
+            return;
+        if (!state) {
+            this.sendMsg("save-status");
+            return;
+        }
+
+        this.sendMsg("save-status", Object.assign({state}, SAVE_STATUS[state]));
+    }
+
+    notifySaveFailure() {
+        if (!this.sendMsg)
+            return;
+        const now = Date.now();
+        if (now - this.lastSaveFailureAlertAt < SAVE_FAILURE_ALERT_THROTTLE_MS)
+            return;
+        this.lastSaveFailureAlertAt = now;
+        this.sendMsg("alert", {
+            message: "Could not save point cloud changes. Do not refresh until the status returns to Saved."
+        });
     }
 
     initDone(){
@@ -2055,14 +2209,11 @@ export default class SseEditor3d extends React.Component {
     }
 
     start() {
-        const serverMeta = SseSamples.findOne({url: this.props.imageUrl});
-        this.meta = serverMeta || {url: this.props.imageUrl};
-        if (serverMeta) {
-            this.meta.socName = serverMeta.socName;
-            this.sendMsg("active-soc-name", {value: this.meta.socName});
-        } else {
-            this.meta.socName = this.activeSoc.name;
-        }
+        const serverMeta = this.pendingServerMeta;
+        this.meta = serverMeta ? Object.assign({}, serverMeta) : {url: this.props.imageUrl};
+        this.meta.socName = this.activeSoc.name;
+        // Persist the selected set immediately so page reload shows the correct set
+        this.saveMeta().catch(() => (0/* saveAll will show user-facing save errors */));
 
         this.sendMsg("currentSample", {data: this.meta});
         const fileUrl = SseGlobals.getFileUrl(this.props.imageUrl);
@@ -2082,7 +2233,7 @@ export default class SseEditor3d extends React.Component {
                     }
                     this.sendMsg("maximum-classIndex", {value: this.maxClassIndex});
                 }, () => {
-                    this.saveBinaryLabels();
+                    this.saveBinaryLabels().catch(() => this.updateSaveStatus("unsaved"));
                 }).then(() => {
                 this.dataManager.loadBinaryFile(this.props.imageUrl + ".objects").then(result => {
                     if (!result.forEach)

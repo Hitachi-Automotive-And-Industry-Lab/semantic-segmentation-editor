@@ -70,8 +70,7 @@ export default class SseApp3d extends React.Component {
                                             id="canvasContainer"
                                             className="grow relative">
                                             <SseEditor3d
-                                                imageUrl={this.props.imageUrl
-                                                }
+                                                imageUrl={this.props.imageUrl}
                                             />
                                             <div
                                                 id="waiting"

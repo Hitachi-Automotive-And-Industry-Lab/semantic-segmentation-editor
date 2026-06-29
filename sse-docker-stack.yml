@@ -1,26 +1,33 @@
-version: '3'
+name: borovets-sse
 
 services:
   app:
-    image: dmandrioli/semantic-segmentation-editor
+    image: borovets/semantic-segmentation-editor:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: borovets-sse-app
     volumes:
-      - "${SSE_IMAGES}:/root/sse-images:rw"
+      - "${SSE_IMAGES:-./pcd_samples}:/root/sse-images:rw"
+      - "${SSE_INTERNAL:-./sse-internal-local}:/root/sse-internal:rw"
     ports:
-      - '80:3000'
+      - "8500:3000"
     depends_on:
       - mongo
     environment:
-      ROOT_URL: ${APP_ROOT_URL:-http://localhost}
+      ROOT_URL: ${APP_ROOT_URL:-http://localhost:8500}
       MONGO_URL: mongodb://mongo:27017/meteor
       PORT: 3000
-      METEOR_SETTINGS: ${METEOR_SETTINGS}
+      METEOR_SETTINGS: "${METEOR_SETTINGS:-}"
 
   mongo:
-    image: mongo:latest
+    image: mongo:7.0
+    container_name: borovets-sse-mongo
     command:
       - --storageEngine=wiredTiger
     volumes:
-      - data:/data/db
+      - borovets_sse_data:/data/db
 
 volumes:
-  data:
+  borovets_sse_data:
+    name: borovets_sse_data

@@ -7,6 +7,19 @@ import $ from "jquery";
 
 class SseEditorApp extends React.Component {
 
+    componentDidMount() {
+        this.showWaiting();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.imageUrl !== this.props.imageUrl)
+            this.showWaiting();
+    }
+
+    showWaiting() {
+        $("#waiting").removeClass("display-none");
+    }
+
     render() {
         if (!this.props.subReady)
             return null;
@@ -19,7 +32,6 @@ class SseEditorApp extends React.Component {
 }
 
 export default withTracker((props) => {
-    $("#waiting").removeClass("display-none");
     const imageUrl = "/" + props.match.params.path;
     let subName = "sse-data-descriptor";
     const subscription = Meteor.subscribe(subName, imageUrl);

@@ -1,4 +1,11 @@
+.DS_Store
 node_modules
 .meteor/.id
 .meteor/versions
 .vscode/*
+.cursor/*
+pcd_samples/*
+sse-internal-local/*
+*.log
+docs/UNDO_REDO_3D_NOTES.md
+backups/

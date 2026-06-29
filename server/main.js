@@ -4,6 +4,7 @@ import {basename, extname, join} from "path";
 import url from "url";
 import ColorScheme from "color-scheme";
 import config from "./config";
+import {resolveInside} from "./pathUtils";
 const demoMode = Meteor.settings.configuration["demo-mode"];
 
 let {classes} = config;
@@ -103,8 +104,15 @@ Meteor.methods({
 
         pageIndex = parseInt(pageIndex);
         pageLength = parseInt(pageLength);
-        const folderSlash = folder ? decodeURIComponent(folder) + "/" : "/";
-        const leaf = join(config.imagesFolder, (folderSlash ? folderSlash : ""));
+        let folderSlash;
+        let leaf;
+        try {
+            const decodedFolder = folder ? decodeURIComponent(folder) : "";
+            folderSlash = decodedFolder ? decodedFolder + "/" : "/";
+            leaf = resolveInside(config.imagesFolder, folder ? folder + "/" : "/");
+        } catch (err) {
+            return {error: "Invalid folder path"};
+        }
 
         const existing = existsSync(leaf);
 

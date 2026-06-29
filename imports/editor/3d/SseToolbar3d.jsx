@@ -3,7 +3,7 @@ import React from 'react';
 import SseToolbar from "../../common/SseToolbar";
 import SseBranding from "../../common/SseBranding";
 import {
-    CircleOutline, FileDownloadOutline, Gesture, Minus, Plus, PlusMinus, Redo, SquareOutline,
+    CircleOutline, EyeOff, FileDownloadOutline, Gesture, Minus, Plus, PlusMinus, Redo, SquareOutline,
     Undo
 } from 'mdi-material-ui';
 
@@ -35,6 +35,7 @@ export default class SseToolbar3d extends SseToolbar {
         this.addCommand("autoFocusCommand", "Auto Focus", false, "S", "autoFocus-checkbox");
         this.addCommand("globalboxCommand", "Bounding Box", false, "G", "globalbox-checkbox");
         this.addCommand("selectionOutlineCommand", "Selection Outline", false, "V", "selectionOutline-checkbox");
+        this.addCommand("backgroundVisibilityCommand", "Toggle Background Visibility", false, "E", "toggle-background-visibility", EyeOff);
 
         this.addCommand("undoCommand", "Undo", false, "Ctrl+Z", "undo", Undo, "disabled");
         this.addCommand("redoCommand", "Redo", false, "Ctrl+Y", "redo", Redo, "disabled");

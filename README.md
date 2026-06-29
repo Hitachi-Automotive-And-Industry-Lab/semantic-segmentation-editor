@@ -6,7 +6,20 @@ It supports images (.jpg or .png) and point clouds (.pcd).
 It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactjs.org),
 [Paper.js](http://paperjs.org/) and [three.js](https://threejs.org/).
 
+## About this fork
+
+This repository is a fork of the original
+[Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor](https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor).
+
+Fork repository:
+[nikborovets/semantic-segmentation-editor](https://github.com/nikborovets/semantic-segmentation-editor)
+
+The fork keeps the original 2D/3D labeling workflow and adds project-specific
+3D point cloud labeling improvements, Docker development tooling, and
+documentation.
+
 **Latest changes**
+ - **Fork updates:** Docker development stack, mandatory 3D label-set selection and persistence, safer 3D save tracking, save-status indicator, 3D background visibility shortcut (`E`), and multiple 3D editor bug fixes.
  - **Version 1.5:** Provide a Docker image and update to Meteor 1.10 
  - **Version 1.4:** Support for RGB pointclouds (thanks @Gekk0r)
  - **Version 1.3:** Improve pointcloud labeling: bug fixes and performance improvement (labeling a 1M pointcloud is now possible)
@@ -30,15 +43,44 @@ It is a [Meteor](http://www.meteor.com) app developed with [React](http://reactj
 
 ## How to run
 
-### Using Docker Compose
+### Docker development stack (recommended for this fork)
+
+Build once:
+
+```bash
+docker compose -f sse-docker-stack.dev.yml build
+```
+
+Run with the project-specific settings file:
+
+```bash
+SETTINGS_FILE=room_labels_new.json docker compose -f sse-docker-stack.dev.yml up
+```
+
+Open `http://localhost:8500`.
+
+By default this stack mounts:
+
+- `./pcd_samples` as the image/PCD folder
+- `./sse-internal-local` as the 3D labels/objects storage folder
+
+After changing JS/JSX/Less application code, restart the app container:
+
+```bash
+docker compose -f sse-docker-stack.dev.yml restart app
+```
+
+See [docs/DOCKER_DEV.md](docs/DOCKER_DEV.md) for the full workflow.
+
+### Production Docker Compose stack
 
 1. Download the docker compose stack file (`sse-docker-stack.yml`)
-2. Set the folder that contains bitmap and point cloud files (`YOUR_IMAGES_PATH`) and run the tool using docker-compose
-3. The tool runs by default on port 80, you can change the mapping in `sse-docker-stack.yml`
+2. Set the folder that contains bitmap and point cloud files (`YOUR_IMAGES_PATH`) and run the tool using Docker Compose
+3. The tool runs by default on `http://localhost:8500`; you can change the mapping in `sse-docker-stack.yml`
 ```
-wget https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/sse-docker-stack.yml
-wget https://raw.githubusercontent.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/master/settings.json
-METEOR_SETTINGS=$(cat ./settings.json) SSE_IMAGES=YOUR_IMAGES_PATH docker-compose -f stack.yml up
+wget https://raw.githubusercontent.com/nikborovets/semantic-segmentation-editor/master/sse-docker-stack.yml
+wget https://raw.githubusercontent.com/nikborovets/semantic-segmentation-editor/master/settings.json
+METEOR_SETTINGS=$(cat ./settings.json) SSE_IMAGES=YOUR_IMAGES_PATH docker compose -f sse-docker-stack.yml up
 ```
 (Optional) You can modify `settings.json` to customize classes data.
 
@@ -52,11 +94,15 @@ curl https://install.meteor.com/ | sh
 
 or download [Meteor Windows Installer](http://www.meteor.com/install)
 
-#### Download and unzip latest version from [here](https://github.com/Hitachi-Automotive-And-Industry-Lab/semantic-segmentation-editor/releases)
+#### Clone this fork
+
+```shell
+git clone https://github.com/nikborovets/semantic-segmentation-editor.git
+cd semantic-segmentation-editor
+```
 
 #### Start the application
 ```shell
-cd semantic-segmentation-editor-x.x.x
 meteor npm install
 meteor npm start
 ```
@@ -166,6 +212,9 @@ marking)
   - Mouse right button: Used to select multiple points at the same time depending on the current Selection Tool and
   Selection Mode.
   - Arrow keys: Move through the scene 
+  - `E`: Toggle background (`classIndex === 0`) visibility in the 3D class list.
+  - `D` / `Delete`: Reset the current selection back to background.
+  - Save status is shown in the bottom bar. Wait for `Saved` before refreshing the page.
   
 ### PCD support
 
@@ -177,9 +226,16 @@ marking)
 
  - <code>/api/listing</code>: List all annotated images
  - <code>/api/json/[PATH_TO_FILE]</code>: (2D only) Get the polygons and other data for that file
- - <code>/api/pcdtext/[PATH_TO_FILE]</code>: (3D only) Get the labeling of a pcd file using 2 addditional
+ - <code>/api/pcdtext/[PATH_TO_FILE]</code>: (3D only) Get the labeling of a pcd file using 2 additional
  columns: <code>label</code>
  and <code>object</code>
  -  <code>/api/pcdfile/[PATH_TO_FILE]</code>: (3D only) The same but returned as "plain/text" attachment file download
+
+## Project documentation
+
+- [docs/README.md](docs/README.md): documentation index
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): architecture overview
+- [docs/DOCKER_DEV.md](docs/DOCKER_DEV.md): Docker development workflow
+- [docs/CHANGES.md](docs/CHANGES.md): fork change summary
 
 

@@ -1,6 +1,8 @@
 import FIC from "fastintcompression";
 import SseMsg from "./SseMsg";
 
+const SAVE_TIMEOUT_MS = 30000;
+
 export default class SseDataManager {
     constructor() {
 
@@ -100,21 +102,54 @@ export default class SseDataManager {
 
 
     saveBinaryFile(fileName, data) {
-        const worker = new Worker("/SseDataWorker.js");
-        worker.addEventListener("message", (arg) => {
-            worker.terminate();
-            //this.sendMsg("bottom-right-label", {message: "Sending..."})
-            const binary = arg.data.result;
-            if (!binary)
-                return;
+        return new Promise((res, rej) => {
+            let worker;
+            let done = false;
+            const finish = (callback, value) => {
+                if (done)
+                    return;
+                done = true;
+                clearTimeout(workerTimeout);
+                if (worker)
+                    worker.terminate();
+                callback(value);
+            };
+            const fail = (error) => finish(rej, error);
+            const workerTimeout = setTimeout(() => fail(new Error("Binary compression timed out")), SAVE_TIMEOUT_MS);
 
-            const url = "/save" + fileName;
-            const oReq = new XMLHttpRequest();
-            oReq.open("POST", url, true);
-            oReq.setRequestHeader("Content-Type", "application/octet-stream");
-            oReq.send(binary);
+            try {
+                worker = new Worker("/SseDataWorker.js");
+            } catch (error) {
+                fail(error);
+                return;
+            }
+
+            worker.addEventListener("error", error => fail(error));
+            worker.addEventListener("message", (arg) => {
+                clearTimeout(workerTimeout);
+                const binary = arg.data.result;
+                if (!binary) {
+                    fail(new Error("Binary compression failed"));
+                    return;
+                }
+
+                const url = "/save" + fileName;
+                const oReq = new XMLHttpRequest();
+                oReq.open("POST", url, true);
+                oReq.timeout = SAVE_TIMEOUT_MS;
+                oReq.setRequestHeader("Content-Type", "application/octet-stream");
+                oReq.onloadend = (oEvent) => {
+                    if (oEvent.target.status == 200)
+                        finish(res);
+                    else
+                        fail(new Error("Save failed with HTTP status " + oEvent.target.status));
+                };
+                oReq.onerror = () => fail(new Error("Save request failed"));
+                oReq.ontimeout = () => fail(new Error("Save request timed out"));
+                oReq.send(binary);
+            });
+            worker.postMessage({operation: "compress", data});
         });
-        worker.postMessage({operation: "compress", data});
     }
 
     loadBinaryFile(fileName) {

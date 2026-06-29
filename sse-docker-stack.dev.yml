@@ -1,0 +1,77 @@
+# Development stack: repo bind-mounted; code is applied on container start/restart (not on every save).
+#
+# First time:
+#   docker compose -f sse-docker-stack.dev.yml build
+#   SETTINGS_FILE=room_labels_new.json docker compose -f sse-docker-stack.dev.yml up
+#
+# After editing JS/JSX/Less (rebuilds only when sources changed; npm skipped if bundle deps unchanged):
+#   docker compose -f sse-docker-stack.dev.yml restart app
+#
+# Force full meteor build + server npm install:
+#   SSE_FORCE_REBUILD=1 docker compose -f sse-docker-stack.dev.yml restart app
+#
+# Optional hot reload on save: SSE_HOT_RELOAD=1 docker compose -f sse-docker-stack.dev.yml up
+
+name: borovets-sse-dev
+
+services:
+  app:
+    image: borovets/semantic-segmentation-editor:dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: borovets-sse-app-dev
+    platform: linux/amd64
+    # Host-mounted script may lack +x; bash avoids "permission denied" on exec.
+    entrypoint: ["bash", "/usr/local/bin/docker-dev-entrypoint.sh"]
+    volumes:
+      - .:/opt/src
+      - ./scripts/docker-dev-entrypoint.sh:/usr/local/bin/docker-dev-entrypoint.sh:ro
+      - ./scripts/load-meteor-settings.js:/usr/local/lib/sse/load-meteor-settings.js:ro
+      - borovets_sse_dev_node_modules:/opt/src/node_modules
+      - borovets_sse_dev_meteor_local:/opt/src/.meteor/local
+      - borovets_sse_dev_bundle:/var/cache/borovets-sse-meteor-build
+      - borovets_sse_dev_npm_cache:/root/.npm
+      # - "${SSE_IMAGES:-/mnt/data/n.borovets/pcd_for_sem_seg_editor}:/root/sse-images:rw"
+      - "${SSE_IMAGES:-./pcd_samples}:/root/sse-images:rw"
+      - "${SSE_INTERNAL:-./sse-internal-local}:/root/sse-internal:rw"
+    ports:
+      - "8500:3000"
+    depends_on:
+      - mongo
+    environment:
+      ROOT_URL: ${APP_ROOT_URL:-http://localhost:8500}
+      MONGO_URL: mongodb://mongo:27017/meteor
+      PORT: 3000
+      SETTINGS_FILE: ${SETTINGS_FILE:-settings.json}
+      METEOR_SETTINGS: "${METEOR_SETTINGS:-}"
+      # 0 = rebuild on container start/restart only (default). 1 = meteor run with hot reload.
+      SSE_HOT_RELOAD: ${SSE_HOT_RELOAD:-0}
+      SSE_FORCE_REBUILD: ${SSE_FORCE_REBUILD:-0}
+      METEOR_ALLOW_SUPERUSER: "1"
+      http_proxy: socks5h://172.17.0.1:32448
+      https_proxy: socks5h://172.17.0.1:32448
+      HTTP_PROXY: socks5h://172.17.0.1:32448
+      HTTPS_PROXY: socks5h://172.17.0.1:32448
+    stdin_open: true
+    tty: true
+
+  mongo:
+    image: mongo:7.0
+    container_name: borovets-sse-mongo-dev
+    command:
+      - --storageEngine=wiredTiger
+    volumes:
+      - borovets_sse_data_dev:/data/db
+
+volumes:
+  borovets_sse_dev_node_modules:
+    name: borovets_sse_dev_node_modules
+  borovets_sse_dev_meteor_local:
+    name: borovets_sse_dev_meteor_local
+  borovets_sse_dev_bundle:
+    name: borovets_sse_dev_bundle
+  borovets_sse_dev_npm_cache:
+    name: borovets_sse_dev_npm_cache
+  borovets_sse_data_dev:
+    name: borovets_sse_data_dev

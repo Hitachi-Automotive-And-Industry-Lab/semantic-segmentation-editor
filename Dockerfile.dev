@@ -1,0 +1,17 @@
+# Dev image: Meteor toolchain + npm deps. Application source is bind-mounted at runtime.
+# Match .meteor/release
+FROM geoffreybooth/meteor-base:1.12
+
+COPY package*.json $APP_SOURCE_FOLDER/
+
+RUN bash $SCRIPTS_FOLDER/build-app-npm-dependencies.sh
+
+WORKDIR $APP_SOURCE_FOLDER
+
+COPY scripts/docker-dev-entrypoint.sh /usr/local/bin/docker-dev-entrypoint.sh
+COPY scripts/load-meteor-settings.js /usr/local/lib/sse/load-meteor-settings.js
+RUN chmod +x /usr/local/bin/docker-dev-entrypoint.sh
+
+EXPOSE 3000
+
+ENTRYPOINT ["/usr/local/bin/docker-dev-entrypoint.sh"]

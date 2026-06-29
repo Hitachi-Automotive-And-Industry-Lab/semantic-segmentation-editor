@@ -1,0 +1,3 @@
+# Not part of the Meteor app (Node preload, shell scripts, backups).
+scripts/
+backups/
